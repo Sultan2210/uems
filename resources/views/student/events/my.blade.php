@@ -9,7 +9,7 @@
       <table class="table align-items-center mb-0">
         <thead>
           <tr>
-            <th>Event</th>
+            <th>Event Name</th>
             <th>Date</th>
             <th>Location</th>
             <th>Attendance</th>
