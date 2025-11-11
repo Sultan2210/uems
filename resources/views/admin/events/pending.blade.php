@@ -49,14 +49,12 @@
   <button class="btn btn-success btn-sm">Approve</button>
 </form>
 
-
 {{-- REJECT (inside the collapse) --}}
 <form action="{{ route('admin.events.reject', $req->id) }}" method="POST">
   @csrf
   <textarea name="admin_comment" class="form-control mb-2" placeholder="Reason (optional)"></textarea>
   <button type="submit" class="btn btn-outline-danger btn-sm">Confirm Reject</button>
 </form>
-
           </div>
         </td>
       </tr>
