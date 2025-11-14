@@ -9,10 +9,25 @@ use App\Models\User;
 
 class AdminController extends Controller
 {
-    public function index()
-    {
-        return view('layouts.admin');
-    }
+   public function index()
+{
+    // Get the count of pending event requests
+    $pendingCount = EventRequest::where('status', 'pending')->count();
+
+    // Get the count of approved events
+    $approvedCount = Event::where('status', 'approved')->count();
+
+    // Get the count of rejected events (ensure correct status is checked)
+    $rejectedCount = Event::where('status', 'rejected')->count();
+
+    // Get the total number of events (approved, pending, and rejected)
+    $totalEvents = Event::count();
+
+    // Pass the data to the view
+    return view('admin.dashboard', compact('pendingCount', 'approvedCount', 'rejectedCount', 'totalEvents'));
+}
+
+
 
 
     public function pendingRequests()
@@ -23,9 +38,11 @@ class AdminController extends Controller
 
 public function approveRequest($id)
 {
+    // Find the pending event request
     $eventRequest = EventRequest::findOrFail($id);
 
-    $event = new \App\Models\Event();
+    // Create a new event based on the request
+    $event = new Event();
     $event->organizer_id   = $eventRequest->organizer_id;
     $event->organizer_name = $eventRequest->organizer_name;
     $event->title          = $eventRequest->title;
@@ -34,13 +51,17 @@ public function approveRequest($id)
     $event->start_time     = $eventRequest->start_time;
     $event->end_time       = $eventRequest->end_time;
     $event->poster_path    = $eventRequest->poster_path;
-    $event->has_certificate= $eventRequest->has_certificate;
+    $event->has_certificate = $eventRequest->has_certificate;
     $event->status         = 'approved';
     $event->save();
 
-    return back()->with('success', 'Event approved successfully.');
-}
+    // Update the EventRequest to 'approved' and mark it as processed
+    $eventRequest->status = 'approved';
+    $eventRequest->save();
 
+    // Redirect back with a success message
+    return redirect()->route('admin.events.approved')->with('success', 'Event approved successfully.');
+}
 
    public function approvedEvents()
     {
@@ -74,16 +95,28 @@ public function approveRequest($id)
 
 
     public function rejectRequest(Request $request, $id)
-    {
-        $request->validate(['admin_comment' => 'nullable|string|max:1000']);
+{
+    $request->validate(['admin_comment' => 'nullable|string|max:1000']);
 
-        $eventRequest = EventRequest::findOrFail($id);
-        $eventRequest->status = 'rejected';
-        $eventRequest->admin_comment = $request->admin_comment;
-        $eventRequest->save();
+    // Find the EventRequest
+    $eventRequest = EventRequest::findOrFail($id);
 
-        return redirect()->back()->with('error', 'Event request rejected.');
+    // Update status and add comment
+    $eventRequest->status = 'rejected';
+    $eventRequest->admin_comment = $request->admin_comment;
+    $eventRequest->save();
+
+    // Optionally, update the event in the Event table (if you have one)
+    $event = Event::where('event_request_id', $eventRequest->id)->first();
+    if ($event) {
+        $event->status = 'rejected';
+        $event->save();
     }
+
+    // Redirect back with a message
+    return redirect()->route('admin.events.rejected')->with('error', 'Event request rejected.');
+}
+
 
     public function userList()
 {

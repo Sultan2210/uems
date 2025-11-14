@@ -12,9 +12,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/admin/dashboard', function () {
-    return view('layouts.admin');
-})->name('admin.dashboard')->middleware('auth');
+Route::get('/admin/dashboard', [AdminController::class, 'index'])
+    ->name('admin.dashboard')
+    ->middleware('auth');
 
 Route::get('/organizer/dashboard', function () {
     return view('layouts.organizer');
