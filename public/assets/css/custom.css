@@ -1,0 +1,109 @@
+/* ===== UEMS Sidebar (screenshot style) ===== */
+#sidenav-main.uems-sidebar {
+  background-color: #1f2234 !important;        /* deep navy */
+  color: #cbd5e1 !important;                   /* slate-200 text */
+  box-shadow: none;
+}
+
+#sidenav-main.uems-sidebar .sidenav-header .navbar-brand span {
+  color: #f8fafc !important;
+}
+
+/* Links */
+#sidenav-main.uems-sidebar .nav-link.uems-link {
+  color: #cbd5e1 !important;
+  display: flex; align-items: center; gap: .75rem;
+  padding: .65rem .9rem;
+  border-radius: 10px;
+  transition: background .15s ease, color .15s ease;
+}
+
+/* Icon tile behind the icon */
+#sidenav-main.uems-sidebar .nav-link.uems-link .icon-tile {
+  width: 28px; height: 28px;
+  display: grid; place-items: center;
+  background: rgba(255,255,255,.08);
+  border-radius: 6px;
+  color: #e2e8f0;
+  transition: background .15s ease, color .15s ease;
+}
+
+/* Material icon size */
+#sidenav-main.uems-sidebar .nav-link.uems-link i.material-symbols-rounded {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Hover */
+#sidenav-main.uems-sidebar .nav-link.uems-link:hover {
+  background: rgba(59,130,246,.10);           /* subtle blue wash */
+  color: #e5e7eb !important;
+}
+#sidenav-main.uems-sidebar .nav-link.uems-link:hover .icon-tile {
+  background: rgba(59,130,246,.35);
+  color: #ffffff;
+}
+
+/* Active state */
+#sidenav-main.uems-sidebar .nav-link.uems-link.active {
+  background: rgba(59,130,246,.18) !important; /* blue pill */
+  color: #ffffff !important;
+}
+#sidenav-main.uems-sidebar .nav-link.uems-link.active .icon-tile {
+  background: #3b82f6;                         /* blue-500 */
+  color: #ffffff;
+}
+
+/* Section label */
+#sidenav-main.uems-sidebar h6 {
+  color: #94a3b8 !important;                  /* slate-400 */
+}
+
+/* Neutralize template's default dark gradient on active links */
+#sidenav-main.uems-sidebar .nav-link.bg-gradient-dark {
+  background: transparent !important;
+}
+/* Light grey background for input fields */
+input.form-control,
+textarea.form-control,
+select.form-control {
+  background-color: #f1f1f1 !important;   /* light grey */
+  border: 1px solid #ccc;                  /* subtle border */
+}
+
+/* Focus effect to highlight the field on typing */
+input.form-control:focus,
+textarea.form-control:focus,
+select.form-control:focus {
+  background-color: #fff !important;       /* white background on focus */
+  border-color: #0d6efd;                   /* blue border for focus state */
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25); /* light blue shadow */
+}
+
+/* Customizing buttons to match the look */
+button[type="submit"] {
+  background-color: #0d6efd;                /* blue button background */
+  color: white;                              /* white text */
+  border: none;
+}
+
+button[type="button"] {
+  background-color: #6c757d;                /* grey button background */
+  color: white;                              /* white text */
+  border: none;
+}
+
+/* Customizing the radio buttons and labels */
+input[type="radio"]:checked {
+  background-color: #0d6efd;                /* blue check */
+  border-color: #0d6efd;
+}
+
+input[type="radio"]:not(:checked) {
+  background-color: #f1f1f1;                /* grey when unchecked */
+  border-color: #ccc;
+}
+
+label {
+  font-weight: 600;                          /* Bold labels for clear readability */
+}

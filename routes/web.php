@@ -40,9 +40,32 @@ Route::middleware('auth')->group(function () {
 });
 // Organizer routes
 Route::prefix('organizer')->middleware(['auth', 'role:organizer'])->name('organizer.')->group(function () {
-    Route::get('/add-event', [\App\Http\Controllers\OrganizerController::class, 'create'])->name('events.create');
-    Route::post('/add-event', [\App\Http\Controllers\OrganizerController::class, 'store'])->name('events.store');
+    // Display all submitted events
+    Route::get('/events', [OrganizerController::class, 'index'])->name('events.index');
+
+    // Edit event
+    Route::get('/events/edit/{id}', [OrganizerController::class, 'edit'])->name('events.edit');
+
+    // Update event (for rejected events)
+    Route::post('/events/update/{id}', [OrganizerController::class, 'update'])->name('events.update');
+
+    // Delete event
+    Route::post('/events/delete/{id}', [OrganizerController::class, 'destroy'])->name('events.delete');
 });
+
+Route::middleware(['auth', 'role:organizer'])->prefix('organizer')->name('organizer.')->group(function () {
+    // Display events for the organizer
+    Route::get('/dashboard', [OrganizerController::class, 'index'])->name('dashboard');
+});
+
+Route::prefix('organizer')->middleware(['auth', 'role:organizer'])->name('organizer.')->group(function () {
+    // Display the event creation form
+    Route::get('/add-event', [OrganizerController::class, 'create'])->name('events.create');
+
+    // Store the new event
+    Route::post('/add-event', [OrganizerController::class, 'store'])->name('events.store');
+});
+
 
 
 // Admin routes
@@ -72,3 +95,4 @@ Route::prefix('student')->middleware(['auth','role:student'])->group(function ()
     Route::post('/events/{event}/attend',   [StudentEventController::class, 'markAttendance'])->name('student.events.attend');
     Route::get('/my-registrations',         [StudentEventController::class, 'my'])->name('student.events.my');
 });
+

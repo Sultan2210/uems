@@ -4,55 +4,88 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\EventRequest;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
+use App\Models\Event;
 
 class OrganizerController extends Controller
 {
+    // Display all events submitted by the organizer (Pending, Approved, Rejected)
     public function index()
-    {
- $events = \App\Models\Event::where('created_by', auth()->id())
-        ->withCount('registrations')
-        ->orderByDesc('created_at')
-        ->get();
-        }
-    public function create()
-    {
-        return view('organizer.events.create');
-    }
-
-
-    public function store(Request $request)
 {
-    $request->validate([
-        'title' => 'required|string|max:255',
-         'organizer_name' => 'required|string|max:255',
-        'venue' => 'required|string|max:255',
-        'start_time' => 'required|date',
-        'end_time' => 'required|date|after_or_equal:start_time',
-        'description' => 'nullable|string',
-        'poster_path' => 'nullable|image|max:4096',
-    ]);
+    // Fetch events submitted by the logged-in organizer, grouped by status
+    $events = \App\Models\EventRequest::where('organizer_id', auth()->id())
+        ->orderBy('status', 'asc')   // Grouping by status: pending, approved, rejected
+        ->get();
 
-    $event = new \App\Models\EventRequest();
-    $event->organizer_id = auth()->id();
-    $event->organizer_name = $request->organizer_name;
-    $event->title = $request->title;
-    $event->venue = $request->venue;
-    $event->description = $request->description;
-    $event->start_time = $request->start_time;
-    $event->end_time = $request->end_time;
-    $event->has_certificate = $request->has('has_certificate');
-    $event->status = 'pending';
-
-    if ($request->hasFile('poster_path')) {
-        $path = $request->file('poster_path')->store('event_posters', 'public');
-        $event->poster_path = $path;
-    }
-
-    $event->save();
-
-    return redirect()->route('organizer.events.create')->with('success', 'Event request submitted for admin approval!');
+    // Pass the events data to the view
+    return view('organizer.events.index', compact('events'));
 }
 
+public function create()
+{
+    return view('organizer.events.create');  // Return the event creation view
+}
+
+    // Handle event editing
+    public function edit($id)
+    {
+        $event = EventRequest::findOrFail($id);
+
+        if ($event->organizer_id !== auth()->id()) {
+            return redirect()->route('organizer.events.index')->with('error', 'Unauthorized action.');
+        }
+
+        return view('organizer.events.edit', compact('event'));
+    }
+
+    // Handle event update (status reset for rejected events)
+    public function update(Request $request, $id)
+    {
+        $event = EventRequest::findOrFail($id);
+
+        if ($event->organizer_id !== auth()->id()) {
+            return redirect()->route('organizer.events.index')->with('error', 'Unauthorized action.');
+        }
+
+        // Validate inputs
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'venue' => 'required|string|max:255',
+            'start_time' => 'required|date',
+            'end_time' => 'required|date|after_or_equal:start_time',
+            'description' => 'nullable|string',
+            'poster_path' => 'nullable|image|max:4096',
+            'admin_comment' => 'nullable|string',  // For rejected events
+        ]);
+
+        // Handle poster upload
+        if ($request->hasFile('poster_path')) {
+            $validated['poster_path'] = $request->file('poster_path')->store('event_posters', 'public');
+        }
+
+        // Update event details
+        $event->update($validated);
+
+        // If event was rejected, reset the status to 'pending' and clear the admin comment
+        if ($event->status == 'rejected') {
+            $event->status = 'pending';
+            $event->admin_comment = null;  // Reset comment
+            $event->save();
+        }
+
+        return redirect()->route('organizer.events.index')->with('success', 'Event updated successfully!');
+    }
+
+    // Handle event deletion
+    public function destroy($id)
+    {
+        $event = EventRequest::findOrFail($id);
+
+        if ($event->organizer_id !== auth()->id()) {
+            return redirect()->route('organizer.events.index')->with('error', 'Unauthorized action.');
+        }
+
+        // Delete the event
+        $event->delete();
+        return redirect()->route('organizer.events.index')->with('success', 'Event deleted successfully!');
+    }
 }
