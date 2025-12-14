@@ -1,6 +1,6 @@
-/* ===== iEvent Register (same layout as login design) ===== */
+/* ===== iEvent Login (match screenshot) ===== */
 
-.ie-auth-wrap{
+.ie-login-wrap{
   min-height: 100vh;
   background:#E9E9EE;
   display:flex;
@@ -9,7 +9,7 @@
   padding:24px;
 }
 
-.ie-auth-card{
+.ie-login-card{
   width: min(1100px, 100%);
   height: 650px;
   background:#fff;
@@ -20,7 +20,7 @@
 }
 
 /* Left dark panel */
-.ie-auth-left{
+.ie-login-left{
   position:absolute;
   inset:0 auto 0 0;
   width: 360px;
@@ -36,18 +36,37 @@
   font-weight:800;
 }
 
-.ie-brand img{ width:30px; height:30px; }
-.ie-brand span{ font-size:18px; letter-spacing:.2px; }
+.ie-brand img{
+  width:30px;
+  height:30px;
+}
 
-/* Right panel with curve (same as login) */
-.ie-auth-right{
+.ie-brand span{
+  font-size:18px;
+  letter-spacing:.2px;
+}
+
+/* Right white panel with big curve */
+.ie-login-right{
   position:absolute;
-  inset:0 0 0 260px; /* overlap into left */
+  inset:0 0 0 260px;            /* overlap into the dark panel */
   background:#fff;
   border-top-left-radius: 90px;
   border-bottom-left-radius: 90px;
   padding: 70px 110px;
 }
+
+/* Close icon (X) */
+.ie-close{
+  position:absolute;
+  top:24px;
+  right:28px;
+  font-size:34px;
+  color:#C9C9CF;
+  text-decoration:none;
+  line-height:1;
+}
+.ie-close:hover{ color:#9f9faa; }
 
 /* Title */
 .ie-title{
@@ -55,7 +74,7 @@
   font-size:42px;
   font-weight:800;
   color:#2B2D42;
-  margin: 0 0 24px;
+  margin: 0 0 30px;
 }
 
 /* Form */
@@ -64,14 +83,29 @@
   margin: 0 auto;
 }
 
+.ie-role-row{
+  display:flex;
+  justify-content:center;
+  gap:28px;
+  margin-bottom: 26px;
+  color:#6b7280;
+  font-size:13px;
+  font-weight:600;
+}
+
+.ie-role-row label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+}
+
 .ie-label{
   font-size:13px;
   font-weight:700;
   color:#6b7280;
   margin-bottom:6px;
 }
-
-.ie-field{ margin-bottom:14px; }
 
 .ie-input{
   width:100%;
@@ -87,22 +121,23 @@
   box-shadow: 0 0 0 .2rem rgba(43,45,66,.18);
 }
 
-/* Role row (centered like screenshot) */
-.ie-role-row{
-  display:flex;
-  justify-content:center;
-  gap:28px;
-  margin: 10px 0 10px;
-  color:#6b7280;
-  font-size:13px;
-  font-weight:600;
+.ie-field{
+  margin-bottom:18px;
 }
 
-.ie-role-row label{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  cursor:pointer;
+/* Password eye icon placeholder area */
+.ie-password-wrap{
+  position:relative;
+}
+
+.ie-eye{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#9aa0a6;
+  font-size:18px;
+  pointer-events:none; /* display only */
 }
 
 /* Button */
@@ -114,7 +149,7 @@
   border-radius:10px;
   padding:14px;
   font-weight:800;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 .ie-btn:hover{ background:#1F2234; }
 
@@ -133,22 +168,23 @@
 }
 .ie-bottom a:hover{ text-decoration:underline; }
 
-/* Breeze error spacing */
-.ie-form .mt-2{ margin-top:.5rem !important; }
+/* Errors spacing (Breeze component) */
+.ie-form .mt-2{ margin-top: .5rem !important; }
 
 /* Responsive */
 @media (max-width: 992px){
-  .ie-auth-card{ height:auto; }
-  .ie-auth-left{
+  .ie-login-card{ height:auto; }
+  .ie-login-left{
     position:relative;
     width:100%;
     height:150px;
   }
-  .ie-auth-right{
+  .ie-login-right{
     position:relative;
     inset:auto;
     border-radius:0;
     padding:30px 20px 40px;
+    margin-top:0;
   }
-  .ie-title{ font-size:32px; }
+  .ie-close{ display:none; }
 }
