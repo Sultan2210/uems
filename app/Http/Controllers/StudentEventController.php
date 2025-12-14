@@ -1,99 +1,177 @@
 <?php
 
-// app/Http/Controllers/StudentEventController.php
 namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\Registration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class StudentEventController extends Controller
 {
-    // List approved, upcoming/current events for students
-    public function index()
+    /* =====================================================
+       1. EVENT LIST
+    ===================================================== */
+    public function index(Request $request)
     {
-         $events = \App\Models\Event::query()
-        ->where('status', 'approved') // ensure lowercase 'approved' in DB
-        ->withCount('registrations')
-        ->orderByRaw("
-            COALESCE(
-                UNIX_TIMESTAMP(start_at),
-                UNIX_TIMESTAMP(start_time),
-                UNIX_TIMESTAMP(created_at)
-            ) ASC
-        ")
-        ->paginate(9);
+        $query = Event::where('status', 'approved');
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('event_name', 'like', '%' . $request->search . '%')
+                  ->orWhere('location', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $events = $query
+            ->withCount('registrations')
+            ->orderBy('start_at')
+            ->paginate(9);
 
         return view('student.events.index', compact('events'));
     }
 
-    // Event details page
+    /* =====================================================
+       2. EVENT DETAIL
+    ===================================================== */
     public function show(Event $event)
     {
         abort_unless($event->status === 'approved', 404);
 
-        $alreadyRegistered = Registration::where('event_id', $event->id)
+        $registration = Registration::where('event_id', $event->id)
             ->where('user_id', Auth::id())
-            ->exists();
+            ->first();
+
+        $alreadyRegistered = $registration && $registration->status === 'registered';
+        $alreadyAttended   = $registration && $registration->status === 'attended';
 
         $currentCount = $event->registrations()->count();
-        $isFull = $event->capacity ? $currentCount >= $event->capacity : false;
+        $isFull = $event->capacity
+            ? $currentCount >= $event->capacity
+            : false;
 
-        return view('student.events.show', compact('event','alreadyRegistered','currentCount','isFull'));
+        return view('student.events.show', compact(
+            'event',
+            'alreadyRegistered',
+            'alreadyAttended',
+            'currentCount',
+            'isFull'
+        ));
     }
 
-    // Register to event
+    /* =====================================================
+       3. REGISTER (FREE EVENT)
+    ===================================================== */
     public function register(Request $request, Event $event)
     {
         abort_unless($event->status === 'approved', 404);
 
-        $request->validate([
-            'full_name' => ['nullable','string','max:255'],
-            'matric_or_staff_no' => ['nullable','string','max:100'],
-            'department' => ['nullable','string','max:255'],
-        ]);
-
-        // capacity guard
-        if ($event->capacity && $event->registrations()->count() >= $event->capacity) {
-            return back()->with('error','This event is already full.');
+        // Jika event BERBAYAR → redirect ke payment page
+        if ($event->fee > 0) {
+            return redirect()
+                ->route('student.events.payment', $event->id)
+                ->withInput();
         }
 
-        Registration::firstOrCreate(
-            ['event_id' => $event->id, 'user_id' => Auth::id()],
+        // Event FREE
+        Registration::updateOrCreate(
+            [
+                'event_id' => $event->id,
+                'user_id'  => Auth::id(),
+            ],
             [
                 'full_name' => $request->full_name ?? Auth::user()->name,
                 'matric_or_staff_no' => $request->matric_or_staff_no,
-                'department' => $request->department,
+                'phone' => $request->phone,
+                'status' => 'registered',
             ]
         );
 
-        return redirect()->route('student.events.show', $event)->with('success','Registered successfully!');
+        return redirect()
+            ->route('student.events.show', $event->id)
+            ->with('success_register', true);
     }
 
-    // Cancel registration
-    public function cancel(Event $event)
+    /* =====================================================
+       4. PAYMENT PAGE (BERBAYAR SAHAJA)
+    ===================================================== */
+    public function paymentPage(Event $event)
     {
-        $reg = Registration::where('event_id',$event->id)->where('user_id',Auth::id())->first();
-        if ($reg) $reg->delete();
-
-        return back()->with('success','Registration cancelled.');
+        abort_unless($event->fee > 0, 404);
+        return view('student.events.payment', compact('event'));
     }
 
-    // Mark attendance (student self-check-in)
+    /* =====================================================
+       5. SUBMIT PAYMENT
+    ===================================================== */
+    public function submitPayment(Request $request, Event $event)
+    {
+        $request->validate([
+            'payment_receipt' => 'required|image|max:2048',
+        ]);
+
+        $path = $request->file('payment_receipt')
+                        ->store('receipts', 'public');
+
+        Registration::updateOrCreate(
+            [
+                'event_id' => $event->id,
+                'user_id'  => Auth::id(),
+            ],
+            [
+                'full_name' => $request->full_name ?? Auth::user()->name,
+                'matric_or_staff_no' => $request->matric_or_staff_no,
+                'phone' => $request->phone,
+                'proof_of_payment' => $path,
+                'status' => 'registered',
+            ]
+        );
+
+        return redirect()
+            ->route('student.events.show', $event->id)
+            ->with('success_register', true);
+    }
+
+    /* =====================================================
+       6. MARK ATTENDANCE
+    ===================================================== */
     public function markAttendance(Event $event)
     {
-        $reg = Registration::where('event_id',$event->id)->where('user_id',Auth::id())->firstOrFail();
-        $reg->attended = true;
-        $reg->save();
+        $registration = Registration::where('event_id', $event->id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
 
-        return back()->with('success','Attendance recorded.');
+        $registration->update([
+            'status' => 'attended'
+        ]);
+
+        return back()->with('success_attended', true);
     }
 
-    // List my registered events
-    public function my()
+    /* =====================================================
+       7. FEEDBACK PAGE
+    ===================================================== */
+    public function feedback(Event $event)
     {
-        $regs = Registration::with('event')->where('user_id', Auth::id())->latest()->paginate(10);
-        return view('student.events.my', compact('regs'));
+        return view('student.events.feedback', compact('event'));
+    }
+
+    /* =====================================================
+       8. STORE FEEDBACK
+    ===================================================== */
+    public function storeFeedback(Request $request, Event $event)
+    {
+        $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'comment' => 'required|string|max:1000',
+        ]);
+
+        // (Optional) save feedback to DB later
+
+        return redirect()
+            ->route('student.events.show', $event->id)
+            ->with('success_feedback', true);
     }
 }

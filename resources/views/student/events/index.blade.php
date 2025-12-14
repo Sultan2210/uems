@@ -1,65 +1,130 @@
 @extends('layouts.student')
-@section('title','Browse Events | UEMS')
-@section('page-title','Browse Events')
+@section('title','Browse Events | iEvent')
 
 @section('content')
-@php
-    // small helper to resolve a poster path (supports both 'poster' and 'poster_path')
-    function poster_url($event) {
-        // full http(s) link already?
-        if (!empty($event->poster) && str_starts_with($event->poster, 'http')) return $event->poster;
-        if (!empty($event->poster_path) && str_starts_with($event->poster_path, 'http')) return $event->poster_path;
 
-        // storage paths
+@php
+    function poster_url($event) {
         if (!empty($event->poster)) {
             try { return Storage::url($event->poster); } catch (\Throwable $e) {}
         }
-        if (!empty($event->poster_path)) {
-            try { return Storage::url($event->poster_path); } catch (\Throwable $e) {}
-        }
-
-        // public/assets fallback (put a placeholder in public/assets/img/placeholder-event.jpg)
         return asset('assets/img/placeholder-event.jpg');
     }
 @endphp
 
-<div class="row">
-  @forelse($events as $event)
-    @php
-      $name  = $event->event_name ?? $event->title ?? 'Untitled Event';
-      $whenS = optional($event->start_at ?? $event->start_time)->format('d M Y, h:ia');
-      $whenE = optional($event->end_at   ?? $event->end_time)->format('h:ia');
-      $where = $event->location ?? $event->venue ?? '—';
-      $cap   = $event->capacity ?? null;
-      $poster= poster_url($event);
-    @endphp
+{{-- ================= HERO SECTION ================= --}}
+<div class="w-100 position-relative"
+     style="
+        background:url('{{ asset('assets/img/audience-1853662_1280.jpg') }}') center/cover no-repeat;
+        height:420px;
+     ">
 
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <img src="{{ $poster }}" class="card-img-top" alt="poster" style="object-fit:cover;height:180px;">
-        <div class="card-body">
-          <h5 class="card-title mb-2">{{ $name }}</h5>
-          <p class="text-sm mb-1"><strong>When:</strong> {{ $whenS }} @if($event->end_at || $event->end_time) – {{ $whenE }} @endif</p>
-          <p class="text-sm mb-1"><strong>Where:</strong> {{ $where }}</p>
-          <p class="text-sm mb-1">
-            <strong>Registered:</strong>
-            {{ $event->registrations_count ?? $event->registrations_count ?? 0 }}
-            @if(!is_null($cap)) / {{ $cap }} @endif
-          </p>
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,.55)"></div>
+
+    <div class="container position-relative text-white h-100 d-flex align-items-center">
+        <div style="max-width:780px">
+
+            <h2 class="fw-bold" style="font-size:42px">
+                Don’t miss out!
+            </h2>
+
+            <p class="fs-5 mb-4">
+                Explore the <span style="color:#F7C948">vibrant events</span> happening in IIUM
+            </p>
+
+            {{-- SEARCH --}}
+            <form method="GET"
+                  action="{{ route('student.events.index') }}"
+                  class="d-flex gap-2">
+
+                <input type="text"
+                       name="search"
+                       class="form-control form-control-lg"
+                       placeholder="Search events..."
+                       value="{{ request('search') }}">
+
+                <button class="btn btn-lg text-white px-4"
+                        style="background:#1A1A3D">
+                    Search
+                </button>
+            </form>
+
         </div>
-        <div class="card-footer bg-transparent">
-          <a href="{{ route('student.events.show', $event) }}" class="btn btn-dark w-100">View & Register</a>
-        </div>
-      </div>
     </div>
-  @empty
-    <div class="col-12">
-      <div class="alert alert-secondary">No approved events yet.</div>
-    </div>
-  @endforelse
 </div>
 
-<div class="mt-3">
-  {{ $events->links() }}
+{{-- ================= EVENT LIST ================= --}}
+<div class="container py-5">
+
+    <h3 class="fw-bold mb-4">Events</h3>
+
+    <div class="row g-4">
+
+        @forelse($events as $event)
+            <div class="col-md-4">
+
+                {{-- CLICKABLE CARD --}}
+                <a href="{{ route('student.events.show',$event->id) }}"
+                   class="text-decoration-none text-dark">
+
+                    <div class="card h-100 shadow-sm border-0 rounded-4">
+
+                        {{-- IMAGE --}}
+                        <div style="height:180px;overflow:hidden">
+                            <img src="{{ poster_url($event) }}"
+                                 class="w-100 h-100"
+                                 style="object-fit:cover">
+                        </div>
+
+                        {{-- BODY --}}
+                        <div class="card-body">
+
+                            <p class="small text-muted mb-1">
+                                {{ optional($event->start_at)->format('d M Y') }}
+                            </p>
+
+                            <h5 class="fw-bold">
+                                {{ $event->event_name }}
+                            </h5>
+
+                            <p class="text-muted mb-1">
+                                <i class="bi bi-geo-alt"></i>
+                                {{ $event->location }}
+                            </p>
+
+                            <p class="text-muted small">
+                                Registered:
+                                {{ $event->registrations_count }}
+                                @if($event->capacity)
+                                    / {{ $event->capacity }}
+                                @endif
+                            </p>
+                        </div>
+
+                        {{-- FOOTER --}}
+                        <div class="card-footer bg-white border-0 pb-4">
+                            <span class="btn btn-dark w-100 rounded-pill">
+                                View & Register
+                            </span>
+                        </div>
+
+                    </div>
+                </a>
+            </div>
+
+        @empty
+            <div class="col-12 text-center">
+                <div class="alert alert-secondary">
+                    No events available.
+                </div>
+            </div>
+        @endforelse
+    </div>
+
+    {{-- PAGINATION --}}
+    <div class="mt-4">
+        {{ $events->links() }}
+    </div>
 </div>
+
 @endsection

@@ -1,82 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <link rel="icon" type="image/png" href="{{ asset('assets/img/favicon.png') }}">
-  <title>@yield('title','Student | UEMS')</title>
-  <link rel="stylesheet" href="{{ asset('assets/css/nucleo-icons.css') }}">
-  <link rel="stylesheet" href="{{ asset('assets/css/nucleo-svg.css') }}">
-  <link rel="stylesheet" href="{{ asset('assets/css/material-dashboard.css?v=3.2.0') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@yield('title','iEvent')</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ================= NAVBAR ================= */
+        .navbar-custom {
+            background: #2B293D;
+            padding: 14px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1050;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 24px;
+            color: #fff !important;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-link {
+            color: #d1d1d1 !important;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 18px !important;
+            border-radius: 6px;
+            transition: .25s;
+        }
+
+        .nav-link:hover {
+            color: #fff !important;
+        }
+
+        .nav-link.active {
+            background: #F7C948;
+            color: #2B293D !important;
+            font-weight: 600;
+        }
+
+        /* ================= BUTTONS ================= */
+        .btn-login {
+            border: 1px solid #F7C948;
+            color: #F7C948;
+            padding: 6px 22px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-login:hover {
+            background: #F7C948;
+            color: #2B293D;
+        }
+
+        .btn-register {
+            background: #F7C948;
+            color: #2B293D;
+            padding: 6px 22px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-logout {
+            border: 1px solid #F7C948;
+            color: #F7C948;
+            background: transparent;
+            padding: 6px 22px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-logout:hover {
+            background: #F7C948;
+            color: #2B293D;
+        }
+    </style>
 </head>
-<body class="g-sidenav-show bg-gray-100">
+<body>
 
-  <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-radius-lg fixed-start ms-2 bg-white my-2">
-    <div class="sidenav-header px-4 py-3">
-      <a class="navbar-brand m-0" href="#">
-        <img src="{{ asset('assets/img/favicon.png') }}" width="26" height="26" class="navbar-brand-img">
-        <span class="ms-2 text-sm text-dark">UEMS Student</span>
-      </a>
+<!-- ================= HEADER ================= -->
+<nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container">
+
+        <a class="navbar-brand" href="{{ route('student.events.index') }}">
+            <i class="bi bi-flower1" style="color:#F7C948;font-size:26px;"></i>
+            iEvent
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon" style="filter:invert(1)"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav align-items-center">
+
+                <li class="nav-item">
+                    <a class="nav-link {{ Route::is('student.dashboard') ? 'active' : '' }}"
+                       href="{{ route('student.dashboard') }}">
+                        Home
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {{ Route::is('student.events.*') ? 'active' : '' }}"
+                       href="{{ route('student.events.index') }}">
+                        Event
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {{ Route::is('student.events.my') ? 'active' : '' }}"
+                       href="{{ route('student.events.my') }}">
+                        My Registered Event
+                    </a>
+                </li>
+
+                @isset($event)
+                <li class="nav-item">
+                    <a class="nav-link {{ Route::is('student.events.feedback') ? 'active' : '' }}"
+                       href="{{ route('student.events.feedback',$event->id) }}">
+                        Feedback
+                    </a>
+                </li>
+                @endisset
+
+                <li class="nav-item ms-3 d-flex align-items-center gap-3">
+                    <span class="text-white small fw-medium d-none d-lg-block">
+                        Hi, {{ Auth::user()->name }}
+                    </span>
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button class="btn-logout">Log Out</button>
+                    </form>
+                </li>
+
+            </ul>
+        </div>
     </div>
-    <hr class="horizontal dark mt-0 mb-2">
-    <div class="w-auto">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link {{ request()->routeIs('student.events.index') ? 'active bg-gradient-dark text-white' : 'text-dark' }}" href="{{ route('student.events.index') }}">
-            <i class="material-symbols-rounded opacity-5">event</i>
-            <span class="nav-link-text ms-1">Browse Events</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ request()->routeIs('student.events.my') ? 'active bg-gradient-dark text-white' : 'text-dark' }}" href="{{ route('student.events.my') }}">
-            <i class="material-symbols-rounded opacity-5">bookmark_added</i>
-            <span class="nav-link-text ms-1">My Registrations</span>
-          </a>
-        </li>
-        <li class="nav-item mt-3">
-          <h6 class="ps-4 ms-2 text-uppercase text-xs text-dark font-weight-bolder opacity-5">Account</h6>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-dark" href="{{ route('profile.edit') }}">
-            <i class="material-symbols-rounded opacity-5">person</i>
-            <span class="nav-link-text ms-1">Profile</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <form method="POST" action="{{ route('logout') }}">@csrf
-            <button class="nav-link text-dark bg-transparent border-0">
-              <i class="material-symbols-rounded opacity-5">logout</i>
-              <span class="nav-link-text ms-1">Logout</span>
-            </button>
-          </form>
-        </li>
-      </ul>
+</nav>
+
+<!-- ================= CONTENT ================= -->
+<main style="min-height: calc(100vh - 140px);">
+    @yield('content')
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="bg-white border-top py-4">
+    <div class="container text-center text-muted small">
+        &copy; {{ date('Y') }} iEvent. All rights reserved.
     </div>
-  </aside>
+</footer>
 
-  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
-    <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 shadow-none border-radius-xl">
-      <div class="container-fluid py-1 px-3 d-flex justify-content-between">
-        <h4 class="font-weight-bolder mb-0">@yield('page-title')</h4>
-        <div>Welcome, {{ Auth::user()->name }}</div>
-      </div>
-    </nav>
-
-    <div class="container-fluid py-4">
-      @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-      @endif
-      @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-      @endif
-
-      @yield('content')
-    </div>
-  </main>
-
-  <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
-  <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
-  <script src="{{ asset('assets/js/material-dashboard.min.js?v=3.2.0') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
