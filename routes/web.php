@@ -48,32 +48,25 @@ Route::middleware('auth')->group(function () {
 | ADMIN
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth','role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')
+    ->middleware(['auth','role:admin'])
+    ->name('admin.')
+    ->group(function () {
 
-    Route::get('/approved-events',[AdminController::class,'approvedEvents'])
-        ->name('events.approved');
+        Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
 
-    Route::get('/pending-events',[AdminController::class,'pendingEvents'])
-        ->name('events.pending');
+        Route::get('/user-list', [AdminController::class, 'userList'])->name('user.list');
+        Route::post('/user/activate/{id}', [AdminController::class, 'activateUser'])->name('user.activate');
+        Route::post('/user/deactivate/{id}', [AdminController::class, 'deactivateUser'])->name('user.deactivate');
 
-    Route::get('/rejected-events',[AdminController::class,'rejectedEvents'])
-        ->name('events.rejected');
+        Route::get('/approved-events', [AdminController::class, 'approvedEvents'])->name('events.approved');
+        Route::get('/pending-events', [AdminController::class, 'pendingEvents'])->name('events.pending');
+        Route::get('/rejected-events', [AdminController::class, 'rejectedEvents'])->name('events.rejected');
 
-    Route::post('/approve/{id}',[AdminController::class,'approveRequest'])
-        ->name('events.approve');
-
-    Route::post('/reject/{id}',[AdminController::class,'rejectRequest'])
-        ->name('events.reject');
-
-    Route::get('/user-list',[AdminController::class,'userList'])
-        ->name('users.list');
-
-    Route::post('/user/activate/{id}',[AdminController::class,'activateUser'])
-        ->name('users.activate');
-
-    Route::post('/user/deactivate/{id}',[AdminController::class,'deactivateUser'])
-        ->name('users.deactivate');
+        Route::post('/approve/{id}', [AdminController::class, 'approveRequest'])->name('events.approve');
+        Route::post('/reject/{id}', [AdminController::class, 'rejectRequest'])->name('events.reject');
 });
+
 
 /*
 |--------------------------------------------------------------------------
@@ -87,6 +80,32 @@ Route::middleware(['auth','role:organizer'])->prefix('organizer')->name('organiz
 
     Route::post('/events/store',[OrganizerController::class,'store'])
         ->name('events.store');
+});
+Route::prefix('organizer')
+    ->middleware(['auth', 'role:organizer'])
+    ->name('organizer.')
+    ->group(function () {
+
+        Route::get('/dashboard', [OrganizerController::class, 'index'])
+            ->name('dashboard');
+
+        Route::get('/events', [OrganizerController::class, 'index'])
+            ->name('events.index');
+
+        Route::get('/events/create', [OrganizerController::class, 'create'])
+            ->name('events.create');
+
+        Route::post('/events', [OrganizerController::class, 'store'])
+            ->name('events.store');
+
+        Route::get('/events/{id}/edit', [OrganizerController::class, 'edit'])
+            ->name('events.edit');
+
+        Route::put('/events/{id}', [OrganizerController::class, 'update'])
+            ->name('events.update');
+
+        Route::delete('/events/{id}', [OrganizerController::class, 'destroy'])
+            ->name('events.delete');
 });
 
 /*

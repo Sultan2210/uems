@@ -3,6 +3,8 @@
 @section('content')
 <div class="container-fluid px-4 mt-4">
   <h4 class="mb-4">Admin Dashboard</h4>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 
   <div class="row">
     <!-- Pending Events Card (Clickable) -->

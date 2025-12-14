@@ -6,7 +6,8 @@
 @php
     function poster_url($event) {
         if (!empty($event->poster)) {
-            try { return Storage::url($event->poster); } catch (\Throwable $e) {}
+            try { return \Illuminate\Support\Facades\Storage::url($event->poster); }
+ catch (\Throwable $e) {}
         }
         return asset('assets/img/placeholder-event.jpg');
     }
@@ -15,7 +16,7 @@
 {{-- ================= HERO SECTION ================= --}}
 <div class="w-100 position-relative"
      style="
-        background:url('{{ asset('assets/img/audience-1853662_1280.jpg') }}') center/cover no-repeat;
+background:url('{{ asset('assets/img/iiumscenery.jpeg') }}') center/cover no-repeat;
         height:420px;
      ">
 

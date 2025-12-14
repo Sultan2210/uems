@@ -11,12 +11,10 @@ class OrganizerController extends Controller
     // Display all events submitted by the organizer (Pending, Approved, Rejected)
     public function index()
 {
-    // Fetch events submitted by the logged-in organizer, grouped by status
-    $events = \App\Models\EventRequest::where('organizer_id', auth()->id())
-        ->orderBy('status', 'asc')   // Grouping by status: pending, approved, rejected
+    $events = EventRequest::where('organizer_id', auth()->id())
+        ->latest()
         ->get();
 
-    // Pass the events data to the view
     return view('organizer.events.index', compact('events'));
 }
 
@@ -36,7 +34,30 @@ public function create()
 
         return view('organizer.events.edit', compact('event'));
     }
+public function store(Request $request)
+{
+    $data = $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'venue' => 'required|string|max:255',
+        'start_time' => 'required|date',
+        'end_time' => 'required|date|after_or_equal:start_time',
+        'has_certificate' => 'nullable|boolean',
+        'poster' => 'nullable|image|max:2048',
+    ]);
 
+    if ($request->hasFile('poster')) {
+        $data['poster_path'] = $request->file('poster')->store('event_posters', 'public');
+    }
+
+    $data['organizer_id'] = auth()->id();
+    $data['organizer_name'] = auth()->user()->name; // optional
+    $data['status'] = 'pending';
+
+    EventRequest::create($data);
+
+    return redirect()->route('organizer.events.index')->with('success', 'Event request submitted.');
+}
     // Handle event update (status reset for rejected events)
     public function update(Request $request, $id)
     {

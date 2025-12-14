@@ -38,29 +38,24 @@ class AdminController extends Controller
 
 public function approveRequest($id)
 {
-    // Find the pending event request
-    $eventRequest = EventRequest::findOrFail($id);
+    $req = EventRequest::findOrFail($id);
 
-    // Create a new event based on the request
-    $event = new Event();
-    $event->organizer_id   = $eventRequest->organizer_id;
-    $event->organizer_name = $eventRequest->organizer_name;
-    $event->title          = $eventRequest->title;
-    $event->description    = $eventRequest->description;
-    $event->venue          = $eventRequest->venue;
-    $event->start_time     = $eventRequest->start_time;
-    $event->end_time       = $eventRequest->end_time;
-    $event->poster_path    = $eventRequest->poster_path;
-    $event->has_certificate = $eventRequest->has_certificate;
-    $event->status         = 'approved';
-    $event->save();
+    Event::create([
+    'event_name'  => $req->title,
+    'description' => $req->description,
+    'location'    => $req->venue,
+    'poster'      => $req->poster_path,
+    'created_by'  => $req->organizer_id,  // or created_by if you use organizer user id
+    'status'      => 'approved',
+    'start_at'    => $req->start_time,
+    'end_at'      => $req->end_time,
+    'capacity'    => $req->capacity ?? null,
+]);
 
-    // Update the EventRequest to 'approved' and mark it as processed
-    $eventRequest->status = 'approved';
-    $eventRequest->save();
 
-    // Redirect back with a success message
-    return redirect()->route('admin.events.approved')->with('success', 'Event approved successfully.');
+    $req->update(['status' => 'approved']);
+
+    return back()->with('success', 'Event approved.');
 }
 
    public function approvedEvents()
@@ -74,13 +69,13 @@ public function approveRequest($id)
 
     // (optional) list pending
     public function pendingEvents()
-    {
-        $requests = EventRequest::where('status','pending')
-            ->latest()
-            ->paginate(10);
+{
+    $requests = EventRequest::where('status', 'pending')
+        ->latest()
+        ->get();
 
-        return view('admin.events.pending', compact('requests'));
-    }
+    return view('admin.events.pending', compact('requests'));
+}
 
     // (optional) list rejected
     public function rejectedEvents()

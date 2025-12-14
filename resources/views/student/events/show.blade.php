@@ -4,7 +4,7 @@
 @section('content')
 
 @php
-    $poster = $event->poster ? Storage::url($event->poster) : asset('assets/img/placeholder-event.jpg');
+    $poster = $event->poster ? \Illuminate\Support\Facades\Storage::url($event->poster) : asset('assets/img/placeholder-event.jpg');
     $fee = $event->fee ?? 0;
     $price_display = $fee > 0 ? 'RM '.number_format($fee,2) : 'Free';
 @endphp
