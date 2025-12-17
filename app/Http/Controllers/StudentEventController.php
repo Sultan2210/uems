@@ -151,7 +151,20 @@ class StudentEventController extends Controller
     }
 
     /* =====================================================
-       7. FEEDBACK PAGE
+       7. MY REGISTERED EVENTS  ✅ (INI YANG MISSING)
+    ===================================================== */
+    public function my()
+    {
+        $registrations = Registration::with('event')
+            ->where('user_id', Auth::id())
+            ->latest()
+            ->paginate(10);
+
+        return view('student.events.my', compact('registrations'));
+    }
+
+    /* =====================================================
+       8. FEEDBACK PAGE
     ===================================================== */
     public function feedback(Event $event)
     {
@@ -159,7 +172,7 @@ class StudentEventController extends Controller
     }
 
     /* =====================================================
-       8. STORE FEEDBACK
+       9. STORE FEEDBACK
     ===================================================== */
     public function storeFeedback(Request $request, Event $event)
     {

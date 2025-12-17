@@ -7,7 +7,7 @@
     function poster_url($event) {
         if (!empty($event->poster)) {
             try { return \Illuminate\Support\Facades\Storage::url($event->poster); }
- catch (\Throwable $e) {}
+            catch (\Throwable $e) {}
         }
         return asset('assets/img/placeholder-event.jpg');
     }
@@ -16,36 +16,66 @@
 {{-- ================= HERO SECTION ================= --}}
 <div class="w-100 position-relative"
      style="
-background:url('{{ asset('assets/img/iiumscenery.jpeg') }}') center/cover no-repeat;
+        background:url('{{ asset('assets/img/iiumscenery.jpeg') }}') center/cover no-repeat;
         height:420px;
      ">
 
-    <div style="position:absolute;inset:0;background:rgba(0,0,0,.55)"></div>
+    {{-- OVERLAY --}}
+    <div style="position:absolute; inset:0; background:rgba(0,0,0,.55)"></div>
 
-    <div class="container position-relative text-white h-100 d-flex align-items-center">
-        <div style="max-width:780px">
+    {{-- CONTENT --}}
+    <div class="container position-relative h-100 d-flex align-items-center justify-content-center"
+         style="z-index:2">
 
-            <h2 class="fw-bold" style="font-size:42px">
+        {{-- BLOCK CENTER, TEXT LEFT --}}
+        <div class="text-white text-start" style="max-width:900px; width:100%;">
+
+            <h2 class="fw-bold mb-3" style="font-size:40px">
                 Don’t miss out!
             </h2>
 
             <p class="fs-5 mb-4">
-                Explore the <span style="color:#F7C948">vibrant events</span> happening in IIUM
+                Explore the <span style="color:#F7C948">vibrant events</span> happening in IIUM.
             </p>
 
-            {{-- SEARCH --}}
+            {{-- SEARCH BAR + BUTTON --}}
             <form method="GET"
                   action="{{ route('student.events.index') }}"
-                  class="d-flex gap-2">
+                  class="d-flex align-items-center gap-3">
 
-                <input type="text"
-                       name="search"
-                       class="form-control form-control-lg"
-                       placeholder="Search events..."
-                       value="{{ request('search') }}">
+                {{-- SEARCH INPUT --}}
+                <div class="position-relative flex-grow-1">
 
-                <button class="btn btn-lg text-white px-4"
-                        style="background:#1A1A3D">
+                    <i class="bi bi-search position-absolute"
+                       style="
+                           left:18px;
+                           top:50%;
+                           transform:translateY(-50%);
+                           color:#999;
+                           font-size:18px;
+                       "></i>
+
+                    <input type="text"
+                           name="search"
+                           class="form-control"
+                           placeholder="Search Events, Categories, Location..."
+                           value="{{ request('search') }}"
+                           style="
+                               height:58px;
+                               padding-left:52px;
+                               border-radius:12px;
+                               font-size:16px;
+                           ">
+                </div>
+
+                {{-- SEARCH BUTTON --}}
+                <button type="submit"
+                        class="btn text-white fw-semibold px-4"
+                        style="
+                            height:58px;
+                            background:#1A1A3D;
+                            border-radius:12px;
+                        ">
                     Search
                 </button>
             </form>
@@ -53,6 +83,7 @@ background:url('{{ asset('assets/img/iiumscenery.jpeg') }}') center/cover no-rep
         </div>
     </div>
 </div>
+
 
 {{-- ================= EVENT LIST ================= --}}
 <div class="container py-5">
