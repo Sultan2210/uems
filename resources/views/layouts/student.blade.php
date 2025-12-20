@@ -103,10 +103,16 @@
 <nav class="navbar navbar-expand-lg navbar-custom">
     <div class="container">
 
-        <a class="navbar-brand" href="{{ route('student.events.index') }}">
-            <i class="bi bi-flower1" style="color:#F7C948;font-size:26px;"></i>
-            iEvent
-        </a>
+        <a class="navbar-brand d-flex align-items-center"
+   href="{{ route('student.events.index') }}">
+
+    <img src="{{ asset('assets/img/favicon.png') }}"
+         alt="iEvent Logo"
+         style="height:28px; width:auto; margin-right:6px;">
+
+    <span>iEvent</span>
+</a>
+
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon" style="filter:invert(1)"></span>
