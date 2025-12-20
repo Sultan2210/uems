@@ -1,4 +1,5 @@
 @extends('layouts.organizer')
+
 @section('title', 'Add Event | UEMS')
 @section('page-title', 'Add Event')
 
@@ -62,17 +63,53 @@
           <input type="file" name="poster_path" class="form-control">
         </div>
 
-        <!-- Provide Certificate Checkbox -->
-        <div class="mb-3 form-check">
-          <input type="checkbox" name="has_certificate" class="form-check-input" id="has_certificate">
-          <label class="form-check-label" for="has_certificate">Provide Certificate for Attendees</label>
+        <!-- Radio Button for Certificate (Stacked Vertically) -->
+        <div class="mb-3">
+          <label class="form-label">Provide Certificate for Attendees</label>
+          <div class="form-check">
+            <input type="radio" name="has_certificate" value="1" class="form-check-input"
+                   {{ old('has_certificate') == '1' ? 'checked' : '' }}>
+            <label class="form-check-label">Certificate</label>
+          </div>
+          <div class="form-check">
+            <input type="radio" name="has_certificate" value="0" class="form-check-input"
+                   {{ old('has_certificate', '0') == '0' ? 'checked' : '' }}>
+            <label class="form-check-label">No Certificate</label>
+          </div>
         </div>
 
-        <!-- Submit Button -->
-        <button type="submit" class="btn btn-primary">Add Event</button>
+        <!-- Radio Button for Payment -->
+
+          <label>Does this event require payment?</label>
+          <input type="radio" name="requires_payment" value="1"> Payment Required
+          <input type="radio" name="requires_payment" value="0"> No Payment
+
+
+        <!-- QR Code Upload (Appears when Payment is Yes) -->
+    <div id="payment_qr" style="display:none;">
+        <label>Upload Payment QR Code</label>
+        <input type="file" name="payment_qr_code">
+    </div>
+
+        <!-- Submit Button at the Bottom -->
+        <div class="text-left mt-4">
+          <button type="submit" class="btn btn-primary">Add Event</button>
+        </div>
       </form>
     </div>
   </div>
 </div>
 
+
+<script>
+  document.querySelectorAll('input[name="requires_payment"]').forEach((input) => {
+    input.addEventListener('change', function () {
+      if (this.value == '1') {
+        document.getElementById('payment_qr').style.display = 'block';
+      } else {
+        document.getElementById('payment_qr').style.display = 'none';
+      }
+    });
+  });
+</script>
 @endsection

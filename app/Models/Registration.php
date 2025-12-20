@@ -1,25 +1,28 @@
 <?php
 
-// app/Models/Registration.php
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Registration extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'event_id','user_id','full_name','matric_or_staff_no','department','attended'
+        'event_id',
+        'user_id',               // if you use it anywhere
+        'full_name',
+        'matric_or_staff_no',
+        'phone',
+        'status',
+        'proof_of_payment',      // if you use payment
+        'feedback',              // if you store feedback here
     ];
 
-    public function event(): BelongsTo
+    // relationships (optional but recommended)
+    public function event()
     {
         return $this->belongsTo(Event::class);
     }
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(\App\Models\User::class);
-    }
 }
-

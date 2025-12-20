@@ -11,8 +11,16 @@ class Event extends Model
     use HasFactory;
 
     protected $fillable = [
-        'event_name', 'description', 'location', 'poster', 'created_by',
-        'status', 'start_at', 'end_at', 'capacity'
+    'title',
+    'venue',
+    'organizer_name',
+    'start_time',
+    'end_time',
+    'description',
+    'poster_path',
+    'payment_qr_code', // Add this
+    'has_certificate',
+    'requires_payment',
     ];
 
     protected $casts = [
@@ -20,8 +28,14 @@ class Event extends Model
         'end_at'   => 'datetime',
     ];
 
-    public function registrations(): HasMany
+    public function registrations()
     {
         return $this->hasMany(Registration::class);
+    }
+
+    // Optionally, define the relationship to Student (for quick access)
+    public function students()
+    {
+        return $this->belongsToMany(Student::class, 'registrations', 'event_id', 'matric_or_staff_no');
     }
 }

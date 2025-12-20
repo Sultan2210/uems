@@ -36,63 +36,59 @@ class StudentEventController extends Controller
     /* =====================================================
        2. EVENT DETAIL
     ===================================================== */
-    public function show(Event $event)
-    {
-        abort_unless($event->status === 'approved', 404);
+   public function show($eventId)
+{
+    // Find the event using the provided event ID
+    $event = Event::findOrFail($eventId);
 
-        $registration = Registration::where('event_id', $event->id)
-            ->where('user_id', Auth::id())
-            ->first();
+    // Check if the student is registered for the event using matric_or_staff_no
+    $registration = $event->registrations()->where('matric_or_staff_no', auth()->user()->matric_no)->first();
 
-        $alreadyRegistered = $registration && $registration->status === 'registered';
-        $alreadyAttended   = $registration && $registration->status === 'attended';
+    // Check if the event is full (Optional, depending on your requirements)
+$isFull = ($event->capacity !== null) &&
+          ($event->registrations()->count() >= $event->capacity);
 
-        $currentCount = $event->registrations()->count();
-        $isFull = $event->capacity
-            ? $currentCount >= $event->capacity
-            : false;
+    // Determine the status of the registration
+    $alreadyRegistered = false;
+    $alreadyAttended = false;
 
-        return view('student.events.show', compact(
-            'event',
-            'alreadyRegistered',
-            'alreadyAttended',
-            'currentCount',
-            'isFull'
-        ));
+    if ($registration) {
+        // Check if the student is registered
+        $alreadyRegistered = $registration->status === 'registered' || $registration->status === 'attended';
+
+        // Check if the student has already attended
+        $alreadyAttended = $registration->status === 'attended';
     }
+
+    // Return the event details view and pass the necessary data
+    return view('student.events.show', compact('event', 'registration', 'alreadyRegistered', 'alreadyAttended', 'isFull'));
+}
+
 
     /* =====================================================
        3. REGISTER (FREE EVENT)
     ===================================================== */
     public function register(Request $request, Event $event)
-    {
-        abort_unless($event->status === 'approved', 404);
+{
+    $request->validate([
+        'matric_or_staff_no' => 'required|string',
+        'phone' => 'required|string',
+    ]);
 
-        // Jika event BERBAYAR → redirect ke payment page
-        if ($event->fee > 0) {
-            return redirect()
-                ->route('student.events.payment', $event->id)
-                ->withInput();
-        }
+    Registration::updateOrCreate(
+    [
+        'event_id' => $event->id,
+        'user_id'  => Auth::id(), // ✅ REQUIRED
+    ],
+    [
+        'matric_or_staff_no' => Auth::user()->matric_no, // keep this too
+        'full_name' => $request->full_name ?? Auth::user()->name,
+        'status' => 'registered',
+    ]
+    );
 
-        // Event FREE
-        Registration::updateOrCreate(
-            [
-                'event_id' => $event->id,
-                'user_id'  => Auth::id(),
-            ],
-            [
-                'full_name' => $request->full_name ?? Auth::user()->name,
-                'matric_or_staff_no' => $request->matric_or_staff_no,
-                'phone' => $request->phone,
-                'status' => 'registered',
-            ]
-        );
-
-        return redirect()
-            ->route('student.events.show', $event->id)
-            ->with('success_register', true);
-    }
+    return redirect()->route('student.events.show', $event->id);
+}
 
     /* =====================================================
        4. PAYMENT PAGE (BERBAYAR SAHAJA)
@@ -137,18 +133,24 @@ class StudentEventController extends Controller
     /* =====================================================
        6. MARK ATTENDANCE
     ===================================================== */
-    public function markAttendance(Event $event)
-    {
-        $registration = Registration::where('event_id', $event->id)
-            ->where('user_id', Auth::id())
-            ->firstOrFail();
+    public function markAttendance($eventId)
+{
+    $event = Event::findOrFail($eventId);
+    $student = auth()->user(); // Assuming the student is the logged-in user
 
-        $registration->update([
-            'status' => 'attended'
-        ]);
-
-        return back()->with('success_attended', true);
+    // Check if the student is registered for the event
+    $registration = $event->registrations()->where('matric_or_staff_no', $student->matric_no)->first();
+    if (!$registration) {
+        return back()->with('error', 'You are not registered for this event.');
     }
+
+    // Update the status to 'attended' in the pivot table
+    $registration->update(['status' => 'attended']);
+
+    return back()->with('success', 'Your attendance has been marked.');
+}
+
+
 
     /* =====================================================
        7. MY REGISTERED EVENTS  ✅ (INI YANG MISSING)
@@ -166,10 +168,43 @@ class StudentEventController extends Controller
     /* =====================================================
        8. FEEDBACK PAGE
     ===================================================== */
-    public function feedback(Event $event)
-    {
-        return view('student.events.feedback', compact('event'));
+
+
+public function showFeedbackForm($eventId)
+{
+    $event = Event::findOrFail($eventId);
+
+    // Check if the student is registered for the event
+    $registration = $event->registrations()->where('student_id', auth()->user()->id)->first();
+
+    if (!$registration) {
+        return redirect()->route('student.events.index')->with('error', 'You are not registered for this event.');
     }
+
+    return view('student.events.feedback', compact('event'));
+}
+
+ public function addFeedback(Request $request, $eventId)
+{
+    $request->validate([
+        'feedback' => 'required|string|max:1000',
+    ]);
+
+    $event = Event::findOrFail($eventId);
+    $student = auth()->user();
+
+    // Check if the student is registered for the event
+    $registration = $event->registrations()->where('matric_or_staff_no', $student->matric_no)->first();
+    if (!$registration) {
+        return back()->with('error', 'You are not registered for this event.');
+    }
+
+    // Update the feedback in the pivot table
+    $registration->update(['feedback' => $request->input('feedback')]);
+
+    return back()->with('success', 'Your feedback has been submitted.');
+}
+
 
     /* =====================================================
        9. STORE FEEDBACK

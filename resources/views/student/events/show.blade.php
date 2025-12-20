@@ -1,4 +1,5 @@
 @extends('layouts.student')
+
 @section('title', $event->event_name . ' | iEvent')
 
 @section('content')
@@ -80,12 +81,14 @@
 
         {{-- 4️⃣ BELUM REGISTER --}}
         @else
-            <button class="btn fw-bold px-5 py-3"
+            <button type="button"
+                    class="btn fw-bold px-5 py-3"
                     style="background:#F7C948;color:#1A1A3D"
                     data-bs-toggle="modal"
                     data-bs-target="#registerModal">
                 Register Now
             </button>
+
         @endif
 
     </div>
@@ -170,9 +173,8 @@
                         <span class="text-success">{{ $price_display }}</span>
                     </div>
 
-                    <button class="btn text-white px-4"
-                            style="background:#1A1A3D">
-                        {{ $fee > 0 ? 'Proceed Payment' : 'Confirm Register' }}
+                    <button type="submit" class="btn text-white px-4" style="background:#1A1A3D">
+                        Confirm Register
                     </button>
                 </div>
 

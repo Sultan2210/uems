@@ -19,57 +19,16 @@
                     </p>
 
                     {{-- FORM --}}
-                    <form method="POST"
-                          action="{{ route('student.events.feedback.store', $event->id) }}">
-                        @csrf
+                    <form action="{{ route('student.events.feedback.store', $event->id) }}" method="POST">
+                    @csrf
+                    <div class="mb-3">
+                        <label for="feedback" class="form-label">Your Feedback</label>
+                        <textarea name="feedback" class="form-control" rows="5" placeholder="Write your feedback here..."></textarea>
+                    </div>
 
-                        {{-- RATING --}}
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">
-                                Rate this event
-                            </label>
+                    <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                </form>
 
-                            <div class="d-flex gap-3">
-                                @for($i = 1; $i <= 5; $i++)
-                                    <div class="form-check">
-                                        <input class="form-check-input"
-                                               type="radio"
-                                               name="rating"
-                                               id="rate{{ $i }}"
-                                               value="{{ $i }}"
-                                               required>
-                                        <label class="form-check-label"
-                                               for="rate{{ $i }}">
-                                            {{ $i }}
-                                        </label>
-                                    </div>
-                                @endfor
-                            </div>
-                        </div>
-
-                        {{-- COMMENT --}}
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">
-                                Your Feedback
-                            </label>
-                            <textarea name="comment"
-                                      class="form-control"
-                                      rows="4"
-                                      placeholder="Share your experience..."
-                                      required></textarea>
-                        </div>
-
-                        {{-- BUTTON --}}
-                        <div class="d-flex justify-content-end">
-                            <button type="submit"
-                                    class="btn px-4 text-white"
-                                    style="background:#1A1A3D">
-                                Submit Feedback
-                                <i class="bi bi-send ms-1"></i>
-                            </button>
-                        </div>
-
-                    </form>
 
                 </div>
             </div>

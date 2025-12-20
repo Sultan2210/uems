@@ -138,10 +138,11 @@
 
                 @isset($event)
                 <li class="nav-item">
-                    <a class="nav-link {{ Route::is('student.events.feedback') ? 'active' : '' }}"
-                       href="{{ route('student.events.feedback',$event->id) }}">
-                        Feedback
+                   <a class="nav-link {{ Route::is('student.events.feedback') ? 'active' : '' }}"
+                    href="{{ route('student.events.feedback', $event->id) }}">
+                    Feedback
                     </a>
+
                 </li>
                 @endisset
 

@@ -36,29 +36,62 @@ public function create()
     }
 public function store(Request $request)
 {
-    $data = $request->validate([
+    // Validate the form fields
+    $validatedData = $request->validate([
         'title' => 'required|string|max:255',
-        'description' => 'nullable|string',
         'venue' => 'required|string|max:255',
         'start_time' => 'required|date',
-        'end_time' => 'required|date|after_or_equal:start_time',
-        'has_certificate' => 'nullable|boolean',
-        'poster' => 'nullable|image|max:2048',
+        'end_time' => 'required|date',
+        'poster_path' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        'payment_qr_code' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        'organizer_name' => 'required|string|max:255',
     ]);
 
-    if ($request->hasFile('poster')) {
-        $data['poster_path'] = $request->file('poster')->store('event_posters', 'public');
+    // Check if poster file is being uploaded
+    if ($request->hasFile('poster_path')) {
+        \Log::info('Poster file uploaded: ' . $request->file('poster_path')->getClientOriginalName());
+    } else {
+        \Log::info('No poster file uploaded.');
     }
 
-    $data['organizer_id'] = auth()->id();
-    $data['organizer_name'] = auth()->user()->name; // optional
-    $data['status'] = 'pending';
+    // Check if payment QR code file is being uploaded
+    if ($request->hasFile('payment_qr_code')) {
+        \Log::info('QR Code file uploaded: ' . $request->file('payment_qr_code')->getClientOriginalName());
+    } else {
+        \Log::info('No QR Code file uploaded.');
+    }
 
-    EventRequest::create($data);
+    // Handle file upload for poster
+    $posterPath = null;
+    if ($request->hasFile('poster_path')) {
+        $posterPath = $request->file('poster_path')->store('event_posters', 'public'); // Store in 'event_posters' directory
+    }
 
-    return redirect()->route('organizer.events.index')->with('success', 'Event request submitted.');
+    // Handle file upload for payment QR code
+    $qrCodePath = null;
+    if ($request->hasFile('payment_qr_code')) {
+        $qrCodePath = $request->file('payment_qr_code')->store('payment_qr_codes', 'public'); // Store in 'payment_qr_codes' directory
+    }
+
+    // Store event request with the organizer's ID
+    EventRequest::create([
+        'title' => $request->input('title'),
+        'description' => $request->input('description'),
+        'venue' => $request->input('venue'),
+        'poster_path' => $posterPath,  // Save the file path for the poster
+        'organizer_name' => $request->input('organizer_name'),
+        'organizer_id' => auth()->user()->id,  // Store the ID of the logged-in user (organizer)
+        'status' => 'pending', // Set the initial status to 'pending'
+        'start_time' => $request->input('start_time'),
+        'end_time' => $request->input('end_time'),
+        'capacity' => $request->input('capacity') ?? null,
+        'payment_qr_code' => $qrCodePath, // Save QR code file path
+    ]);
+
+    return redirect()->route('organizer.events.index')->with('success', 'Event request submitted successfully.');
 }
-    // Handle event update (status reset for rejected events)
+
+
     public function update(Request $request, $id)
     {
         $event = EventRequest::findOrFail($id);

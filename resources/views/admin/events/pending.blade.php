@@ -53,7 +53,7 @@
       </button>
 
       <!-- Approve -->
-      <form action="{{ route('admin.events.approve', $req->id) }}" method="POST" style="display:inline;">
+      <form action="{{ route('admin.events.approved', $req->id) }}" method="POST" style="display:inline;">
         @csrf
         <button class="btn btn-success btn-sm">Approve</button>
       </form>
