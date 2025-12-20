@@ -104,14 +104,14 @@
     <div class="container">
 
         <a class="navbar-brand d-flex align-items-center"
-   href="{{ route('student.events.index') }}">
+        href="{{ route('student.events.index') }}">
 
     <img src="{{ asset('assets/img/favicon.png') }}"
          alt="iEvent Logo"
          style="height:28px; width:auto; margin-right:6px;">
 
     <span>iEvent</span>
-</a>
+        </a>
 
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
