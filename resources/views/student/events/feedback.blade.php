@@ -1,40 +1,27 @@
 @extends('layouts.student')
 
-@section('title','Event Feedback')
+@section('title','Feedback | iEvent')
 
 @section('content')
 <div class="container py-5">
+    <h3 class="fw-bold mb-4">Feedback</h3>
 
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-
-            {{-- CARD --}}
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-4">
-
-                    {{-- TITLE --}}
-                    <h4 class="fw-bold mb-2">Event Feedback</h4>
-                    <p class="text-muted small mb-4">
-                        {{ $event->event_name }}
-                    </p>
-
-                    {{-- FORM --}}
-                    <form action="{{ route('student.events.feedback.store', $event->id) }}" method="POST">
-                    @csrf
-                    <div class="mb-3">
-                        <label for="feedback" class="form-label">Your Feedback</label>
-                        <textarea name="feedback" class="form-control" rows="5" placeholder="Write your feedback here..."></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">Submit Feedback</button>
-                </form>
-
-
-                </div>
+    @forelse($registrations as $reg)
+        <div class="card mb-3">
+            <div class="card-body">
+                <h6 class="fw-bold">{{ $reg->event->event_name }}</h6>
+                <a href="{{ route('student.feedback.form', $reg->event->id) }}"
+                   class="btn btn-sm btn-dark mt-2">
+                    Give Feedback
+                </a>
             </div>
-
         </div>
-    </div>
+    @empty
+        <div class="alert alert-info text-center">
+            No attended events yet.
+        </div>
+    @endforelse
 
+    {{ $registrations->links() }}
 </div>
 @endsection

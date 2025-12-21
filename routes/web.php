@@ -118,23 +118,50 @@ Route::middleware(['auth','role:student'])
     ->name('student.')
     ->group(function () {
 
-        // Pages
-        Route::get('/events', [StudentEventController::class, 'index'])->name('events.index');
-        Route::get('/events/{event}', [StudentEventController::class, 'show'])->name('events.show');
-        Route::get('/my-events', [StudentEventController::class, 'my'])->name('events.my');
+        // Dashboard redirect
+        Route::get('/dashboard', fn () =>
+            redirect()->route('student.events.index')
+        )->name('dashboard');
+
+        // Event pages
+        Route::get('/events', [StudentEventController::class, 'index'])
+            ->name('events.index');
+
+        Route::get('/events/{event}', [StudentEventController::class, 'show'])
+            ->name('events.show');
+
+        // My Registered Events
+        Route::get('/my-events', [StudentEventController::class, 'my'])
+            ->name('events.my');
 
         // Register
-        Route::post('/events/{event}/register', [StudentEventController::class, 'register'])->name('events.register');
+        Route::post('/events/{event}/register', [StudentEventController::class, 'register'])
+            ->name('events.register');
 
         // Attendance
-        Route::post('/events/{event}/attend', [StudentEventController::class, 'markAttendance'])->name('events.attend');
+        Route::post('/events/{event}/attend', [StudentEventController::class, 'markAttendance'])
+            ->name('events.attend');
 
-        // Feedback
-        Route::get('/events/{event}/feedback', [StudentEventController::class, 'showFeedbackForm'])->name('events.feedback');
-        Route::post('/events/{event}/feedback', [StudentEventController::class, 'addFeedback'])->name('events.feedback.store');
+        // ================= FEEDBACK =================
 
-        // (Optional) Payment routes (ONLY if you use fee>0 flow)
-        Route::get('/events/{event}/payment', [StudentEventController::class, 'paymentPage'])->name('events.payment');
-        Route::post('/events/{event}/payment', [StudentEventController::class, 'submitPayment'])->name('events.submit_payment');
+        // 🔹 LIST event yang ATTENDED sahaja
+        Route::get('/feedback', [StudentEventController::class, 'feedbackList'])
+            ->name('feedback.index');
+
+        // 🔹 FORM feedback (1 event)
+        Route::get('/feedback/{event}', [StudentEventController::class, 'showFeedbackForm'])
+            ->name('feedback.form');
+
+        // 🔹 SUBMIT feedback
+        Route::post('/feedback/{event}', [StudentEventController::class, 'addFeedback'])
+            ->name('feedback.store');
+
+        // ================= PAYMENT (OPTIONAL) =================
+        Route::get('/events/{event}/payment', [StudentEventController::class, 'paymentPage'])
+            ->name('events.payment');
+
+        Route::post('/events/{event}/payment', [StudentEventController::class, 'submitPayment'])
+            ->name('events.submit_payment');
     });
+
 require __DIR__.'/auth.php';

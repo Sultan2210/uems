@@ -72,10 +72,11 @@
         </button>
     </form>
 
-    <a href="{{ route('student.events.feedback', $event->id) }}"
-       class="btn btn-success btn-sm fw-semibold">
-        Give Feedback
-    </a>
+    <a href="{{ route('student.feedback.form', $event->id) }}"
+   class="btn btn-success btn-sm fw-semibold">
+    Give Feedback
+</a>
+
 </div>
 
 

@@ -16,8 +16,6 @@
         body {
             font-family: 'Poppins', sans-serif;
             background: #f8f9fa;
-            margin: 0;
-            padding: 0;
         }
 
         /* ================= NAVBAR ================= */
@@ -57,30 +55,7 @@
             font-weight: 600;
         }
 
-        /* ================= BUTTONS ================= */
-        .btn-login {
-            border: 1px solid #F7C948;
-            color: #F7C948;
-            padding: 6px 22px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .btn-login:hover {
-            background: #F7C948;
-            color: #2B293D;
-        }
-
-        .btn-register {
-            background: #F7C948;
-            color: #2B293D;
-            padding: 6px 22px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
+        /* ================= BUTTON ================= */
         .btn-logout {
             border: 1px solid #F7C948;
             color: #F7C948;
@@ -103,16 +78,11 @@
 <nav class="navbar navbar-expand-lg navbar-custom">
     <div class="container">
 
-        <a class="navbar-brand d-flex align-items-center"
-        href="{{ route('student.events.index') }}">
-
-    <img src="{{ asset('assets/img/favicon.png') }}"
-         alt="iEvent Logo"
-         style="height:28px; width:auto; margin-right:6px;">
-
-    <span>iEvent</span>
+        <!-- LOGO -->
+        <a class="navbar-brand" href="{{ route('student.events.index') }}">
+            <img src="{{ asset('assets/img/favicon.png') }}" style="height:28px;">
+            <span>iEvent</span>
         </a>
-
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon" style="filter:invert(1)"></span>
@@ -121,6 +91,7 @@
         <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
             <ul class="navbar-nav align-items-center">
 
+                <!-- HOME -->
                 <li class="nav-item">
                     <a class="nav-link {{ Route::is('student.dashboard') ? 'active' : '' }}"
                        href="{{ route('student.dashboard') }}">
@@ -128,13 +99,15 @@
                     </a>
                 </li>
 
+                <!-- EVENT -->
                 <li class="nav-item">
-                    <a class="nav-link {{ Route::is('student.events.*') ? 'active' : '' }}"
+                    <a class="nav-link {{ Route::is('student.events.index') || Route::is('student.events.show') ? 'active' : '' }}"
                        href="{{ route('student.events.index') }}">
                         Event
                     </a>
                 </li>
 
+                <!-- MY REGISTERED EVENTS -->
                 <li class="nav-item">
                     <a class="nav-link {{ Route::is('student.events.my') ? 'active' : '' }}"
                        href="{{ route('student.events.my') }}">
@@ -142,18 +115,17 @@
                     </a>
                 </li>
 
-                @isset($event)
+                <!-- FEEDBACK (LIST ATTENDED SAHAJA) -->
                 <li class="nav-item">
-                   <a class="nav-link {{ Route::is('student.events.feedback') ? 'active' : '' }}"
-                    href="{{ route('student.events.feedback', $event->id) }}">
-                    Feedback
+                    <a class="nav-link {{ Route::is('student.feedback.*') ? 'active' : '' }}"
+                       href="{{ route('student.feedback.index') }}">
+                        Feedback
                     </a>
-
                 </li>
-                @endisset
 
+                <!-- USER -->
                 <li class="nav-item ms-3 d-flex align-items-center gap-3">
-                    <span class="text-white small fw-medium d-none d-lg-block">
+                    <span class="text-white small d-none d-lg-block">
                         Hi, {{ Auth::user()->name }}
                     </span>
 
@@ -168,6 +140,7 @@
     </div>
 </nav>
 
+
 <!-- ================= CONTENT ================= -->
 <main style="min-height: calc(100vh - 140px);">
     @yield('content')
@@ -181,6 +154,5 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
 </body>
 </html>
