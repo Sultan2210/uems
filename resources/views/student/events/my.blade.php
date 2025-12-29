@@ -3,6 +3,22 @@
 @section('title', 'My Registered Events | iEvent')
 
 @section('content')
+{{-- Success Toast --}}
+@if(session('success_attended'))
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+    <div id="attendanceToast" class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-success text-white">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <strong class="me-auto">Success</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            You have successfully attended this event.
+        </div>
+    </div>
+</div>
+@endif
+
 <div class="container py-5">
 
     <h3 class="fw-bold mb-4" style="color:#1A1A3D">
@@ -72,10 +88,10 @@
         </button>
     </form>
 
-    <a href="{{ route('student.feedback.form', $event->id) }}"
-   class="btn btn-success btn-sm fw-semibold">
-    Give Feedback
-</a>
+    <a href="{{ route('student.feedback.index') }}"
+       class="btn btn-success btn-sm fw-semibold">
+        Give Feedback
+    </a>
 
 </div>
 
@@ -94,4 +110,18 @@
     </div>
 
 </div>
+
+@if(session('success_attended'))
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toastElement = document.getElementById('attendanceToast');
+    if (toastElement) {
+        const toast = new bootstrap.Toast(toastElement, {
+            autohide: true,
+            delay: 5000
+        });
+    }
+});
+</script>
+@endif
 @endsection

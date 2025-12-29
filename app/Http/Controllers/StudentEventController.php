@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\Feedback;
 use App\Models\Registration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -64,6 +65,11 @@ class StudentEventController extends Controller
     ===================================================== */
     public function register(Request $request, Event $event)
     {
+        $request->validate([
+            'matric_or_staff_no' => 'required|string|max:255',
+            'department' => 'required|string|max:255',
+        ]);
+
         Registration::updateOrCreate(
             [
                 'event_id' => $event->id,
@@ -71,8 +77,8 @@ class StudentEventController extends Controller
             ],
             [
                 'full_name' => Auth::user()->name,
-                'matric_or_staff_no' => Auth::user()->matric_no,
-                'phone' => $request->phone,
+                'matric_or_staff_no' => $request->matric_or_staff_no,
+                'department' => $request->department,
                 'status' => 'registered',
             ]
         );
@@ -136,7 +142,7 @@ class StudentEventController extends Controller
             ->where('status', 'attended')
             ->firstOrFail();
 
-        return view('student.events.feedback-form', compact('event'));
+        return view('student.events.feedback', compact('event'));
     }
 
     /* =====================================================
@@ -148,13 +154,20 @@ class StudentEventController extends Controller
             'feedback' => 'required|string|max:1000',
         ]);
 
+        // Verify user has attended the event
         $registration = Registration::where('event_id', $eventId)
             ->where('user_id', Auth::id())
             ->where('status', 'attended')
             ->firstOrFail();
 
-        $registration->update([
-            'feedback' => $request->feedback
+        // Create feedback record
+        Feedback::create([
+            'event_id' => $eventId,
+            'user_id' => Auth::id(),
+            'student_name' => Auth::user()->name,
+            'matric_number' => $request->matric_number,
+            'email' => Auth::user()->email,
+            'comments' => $request->feedback,
         ]);
 
         return back()->with('success', 'Feedback submitted successfully.');

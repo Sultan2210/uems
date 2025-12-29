@@ -10,6 +10,22 @@
     $price_display = $fee > 0 ? 'RM '.number_format($fee,2) : 'Free';
 @endphp
 
+{{-- Success Toast --}}
+@if(session('success_attended'))
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+    <div id="attendanceToast" class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-success text-white">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <strong class="me-auto">Success</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            You have successfully attended this event.
+        </div>
+    </div>
+</div>
+@endif
+
 <div class="container py-5">
 
     {{-- BACK --}}
@@ -53,7 +69,7 @@
             </span>
 
             <div class="mt-3">
-                <a href="{{ route('student.events.feedback', $event->id) }}"
+                <a href="{{ route('student.feedback.index') }}"
                    class="btn btn-dark px-5 py-2">
                     Give Feedback
                 </a>
@@ -131,21 +147,23 @@
                         <label class="fw-bold small">Full Name</label>
                         <input type="text" name="full_name"
                                class="form-control"
-                               value="{{ Auth::user()->name }}" required>
+                               value="{{ Auth::user()->name }}" required readonly>
                     </div>
 
                     <div class="mb-3">
-                        <label class="fw-bold small">Matric Number</label>
+                        <label class="fw-bold small">Matric Number <span class="text-danger">*</span></label>
                         <input type="text" name="matric_or_staff_no"
                                class="form-control"
-                               value="{{ Auth::user()->matric_no ?? '' }}">
+                               value="{{ Auth::user()->matric_no ?? '' }}"
+                               required>
                     </div>
 
                     <div class="mb-3">
-                        <label class="fw-bold small">Phone</label>
-                        <input type="text" name="phone"
+                        <label class="fw-bold small">Department <span class="text-danger">*</span></label>
+                        <input type="text" name="department"
                                class="form-control"
-                               value="{{ Auth::user()->phone ?? '' }}">
+                               placeholder="Enter your department"
+                               required>
                     </div>
 
                     {{-- JIKA BERBAYAR --}}
@@ -182,6 +200,20 @@
         </div>
     </div>
 </div>
+@endif
+
+@if(session('success_attended'))
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toastElement = document.getElementById('attendanceToast');
+    if (toastElement) {
+        const toast = new bootstrap.Toast(toastElement, {
+            autohide: true,
+            delay: 5000
+        });
+    }
+});
+</script>
 @endif
 
 @endsection

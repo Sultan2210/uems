@@ -12,10 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('registrations', function (Blueprint $table) {
-            // status: registered / attended
-            $table->string('status')
-                  ->default('registered')
-                  ->after('user_id');
+            if (!Schema::hasColumn('registrations', 'status')) {
+                // status: registered / attended
+                $table->string('status')
+                      ->default('registered')
+                      ->after('user_id');
+            }
         });
     }
 

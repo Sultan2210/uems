@@ -1,9 +1,9 @@
+{{-- resources/views/layouts/organizer.blade.php --}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link rel="apple-touch-icon" sizes="76x76" href="{{ asset('assets/img/favicon.png') }}">
   <link rel="icon" type="image/png" href="{{ asset('assets/img/favicon.png') }}">
   <title>@yield('title', 'Organizer Dashboard | UEMS')</title>
 
@@ -14,9 +14,12 @@
   <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
   <link id="pagestyle" href="{{ asset('assets/css/material-dashboard.css?v=3.2.0') }}" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
-  <!-- Reuse the same custom overrides used on Admin -->
+  <!-- Custom sidebar/theme overrides -->
   <link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet" />
+
+  @yield('styles')
 </head>
 
 <body class="g-sidenav-show bg-gray-100">
@@ -29,7 +32,7 @@
       <i class="fas fa-times p-3 cursor-pointer text-dark opacity-5 position-absolute end-0 top-0 d-none d-xl-none"
          id="iconSidenav"></i>
 
-      <a class="navbar-brand px-4 py-3 m-0 d-flex align-items-center gap-2" href="#">
+      <a class="navbar-brand px-4 py-3 m-0 d-flex align-items-center gap-2" href="{{ route('organizer.dashboard') }}">
         <img src="{{ asset('assets/img/favicon.png') }}" class="navbar-brand-img" width="26" height="26" alt="logo">
         <span class="ms-1 text-sm">iEvent</span>
       </a>
@@ -40,50 +43,47 @@
     <div class="collapse navbar-collapse w-auto" id="sidenav-collapse-main">
       <ul class="navbar-nav">
 
-        {{-- My Events (your current route is organizer.dashboard) --}}
         <li class="nav-item">
           <a class="nav-link uems-link {{ request()->routeIs('organizer.dashboard') ? 'active' : '' }}"
              href="{{ route('organizer.dashboard') }}">
-            <span class="icon-tile"><i class="material-symbols-rounded">view_list</i></span>
+            <span class="icon-tile"><i class="material-symbols-rounded">dashboard</i></span>
+            <span class="nav-link-text ms-1">Dashboard</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link uems-link {{ request()->routeIs('organizer.events.index') ? 'active' : '' }}"
+             href="{{ route('organizer.events.index') }}">
+            <span class="icon-tile"><i class="material-symbols-rounded">event</i></span>
             <span class="nav-link-text ms-1">My Events</span>
           </a>
         </li>
 
-        {{-- Add Event --}}
         <li class="nav-item">
           <a class="nav-link uems-link {{ request()->routeIs('organizer.events.create') ? 'active' : '' }}"
              href="{{ route('organizer.events.create') }}">
-            <span class="icon-tile"><i class="material-symbols-rounded">add</i></span>
+            <span class="icon-tile"><i class="material-symbols-rounded">add_circle</i></span>
             <span class="nav-link-text ms-1">Add Event</span>
           </a>
         </li>
 
-        {{-- Attendee List (update route if you have it) --}}
         <li class="nav-item">
-          <a class="nav-link uems-link {{ request()->routeIs('organizer.attendees.index') ? 'active' : '' }}"
-             href="{{ \Illuminate\Support\Facades\Route::has('organizer.attendees.index') ? route('organizer.attendees.index') : '#' }}">
-            <span class="icon-tile"><i class="material-symbols-rounded">fact_check</i></span>
+          <a class="nav-link uems-link {{ request()->routeIs('organizer.attendees*') ? 'active' : '' }}"
+             href="{{ route('organizer.attendees') }}">
+            <span class="icon-tile"><i class="material-symbols-rounded">groups</i></span>
             <span class="nav-link-text ms-1">Attendee List</span>
           </a>
         </li>
 
-        {{-- Feedback Summary (update route if you have it) --}}
+        {{-- Feedback Summary (Sidebar item) --}}
         <li class="nav-item">
-          <a class="nav-link uems-link {{ request()->routeIs('organizer.feedback.index') ? 'active' : '' }}"
-             href="{{ \Illuminate\Support\Facades\Route::has('organizer.feedback.index') ? route('organizer.feedback.index') : '#' }}">
+        <a class="nav-link uems-link {{ request()->routeIs('organizer.feedback.summary') ? 'active' : '' }}"
+            href="{{ route('organizer.feedback.summary') }}">
             <span class="icon-tile"><i class="material-symbols-rounded">rate_review</i></span>
             <span class="nav-link-text ms-1">Feedback Summary</span>
-          </a>
+        </a>
         </li>
 
-        {{-- Notifications (optional placeholder) --}}
-        <li class="nav-item">
-          <a class="nav-link uems-link {{ request()->routeIs('organizer.notifications') ? 'active' : '' }}"
-             href="{{ \Illuminate\Support\Facades\Route::has('organizer.notifications') ? route('organizer.notifications') : '#' }}">
-            <span class="icon-tile"><i class="material-symbols-rounded">notifications</i></span>
-            <span class="nav-link-text ms-1">Notifications</span>
-          </a>
-        </li>
 
         <li class="nav-item mt-3">
           <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-5">Account</h6>
@@ -100,7 +100,8 @@
         <li class="nav-item">
           <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" class="nav-link uems-link bg-transparent border-0 w-100 text-start">
+            <button type="submit"
+                    class="nav-link uems-link bg-transparent border-0 w-100 text-start">
               <span class="icon-tile"><i class="material-symbols-rounded">logout</i></span>
               <span class="nav-link-text ms-1">Logout</span>
             </button>
@@ -111,7 +112,7 @@
     </div>
   </aside>
 
-  {{-- Main Content --}}
+  {{-- Main content --}}
   <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
     <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 shadow-none border-radius-xl" id="navbarBlur" data-scroll="true">
       <div class="container-fluid py-1 px-3 d-flex justify-content-between">
@@ -127,12 +128,14 @@
     </div>
   </main>
 
-  <!-- Core JS Files -->
+  {{-- Scripts --}}
   <script src="{{ asset('assets/js/core/popper.min.js') }}"></script>
   <script src="{{ asset('assets/js/core/bootstrap.min.js') }}"></script>
   <script src="{{ asset('assets/js/plugins/perfect-scrollbar.min.js') }}"></script>
   <script src="{{ asset('assets/js/plugins/smooth-scrollbar.min.js') }}"></script>
-  <script src="{{ asset('assets/js/plugins/chartjs.min.js') }}"></script>
   <script src="{{ asset('assets/js/material-dashboard.min.js?v=3.2.0') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  @yield('scripts')
 </body>
 </html>

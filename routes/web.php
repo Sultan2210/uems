@@ -106,6 +106,13 @@ Route::prefix('organizer')
 
         Route::delete('/events/{id}', [OrganizerController::class, 'destroy'])
             ->name('events.delete');
+
+        Route::get('/attendees', [OrganizerController::class, 'attendees'])
+            ->name('attendees');
+
+        Route::get('/feedback-summary', [OrganizerController::class, 'feedbackSummary'])
+    ->name('feedback.summary');
+
 });
 
 /*

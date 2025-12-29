@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\EventRequest;
 use App\Models\Event;
+use App\Models\Registration;
+use App\Models\Feedback;
 
 class OrganizerController extends Controller
 {
@@ -142,4 +144,56 @@ public function store(Request $request)
         $event->delete();
         return redirect()->route('organizer.events.index')->with('success', 'Event deleted successfully!');
     }
+
+    public function attendees(Request $request)
+{
+    // Get organizer's approved events
+    $events = Event::where('status', 'approved')
+        ->where('created_by', auth()->id())
+        ->get();
+
+    $selectedEvent = null;
+    $registrations = collect();
+
+    if ($request->filled('event_id')) {
+        $selectedEvent = Event::where('id', $request->event_id)
+            ->where('created_by', auth()->id())
+            ->firstOrFail();
+
+        $registrations = Registration::where('event_id', $selectedEvent->id)
+            ->with('user') // for email
+            ->get();
+    }
+
+    return view('organizer.events.attendee', compact(
+    'events',
+    'registrations',
+    'selectedEvent'
+));
+
+}
+public function feedbackSummary(Request $request)
+{
+    // dropdown events (only organizer’s approved events)
+    $events = Event::where('created_by', auth()->id())
+        ->where('status', 'approved')
+        ->orderByDesc('start_at')
+        ->get();
+
+    $selectedEvent = null;
+    $feedbacks = collect();
+
+    if ($request->filled('event_id')) {
+        $selectedEvent = Event::where('id', $request->event_id)
+            ->where('created_by', auth()->id())
+            ->firstOrFail();
+
+        $feedbacks = Feedback::where('event_id', $selectedEvent->id)
+            ->orderByDesc('created_at')
+            ->get();
+    }
+
+    return view('organizer.events.feedback-summary', compact('events', 'selectedEvent', 'feedbacks'));
+}
+
 }

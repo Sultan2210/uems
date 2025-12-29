@@ -14,10 +14,10 @@ class Registration extends Model
         'user_id',               // if you use it anywhere
         'full_name',
         'matric_or_staff_no',
+        'department',
         'phone',
         'status',
         'proof_of_payment',      // if you use payment
-        'feedback',              // if you store feedback here
     ];
 
     // relationships (optional but recommended)
@@ -25,4 +25,9 @@ class Registration extends Model
     {
         return $this->belongsTo(Event::class);
     }
+    public function user()
+{
+    return $this->belongsTo(\App\Models\User::class, 'user_id');
+}
+
 }
