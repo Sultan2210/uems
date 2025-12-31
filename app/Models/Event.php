@@ -11,16 +11,25 @@ class Event extends Model
     use HasFactory;
 
     protected $fillable = [
-    'title',
-    'venue',
-    'organizer_name',
-    'start_time',
-    'end_time',
-    'description',
-    'poster_path',
-    'payment_qr_code', // Add this
-    'has_certificate',
-    'requires_payment',
+        'event_name',
+        'title',
+        'venue',
+        'location',
+        'organizer_name',
+        'organizer_id',
+        'created_by',
+        'start_time',
+        'start_at',
+        'end_time',
+        'end_at',
+        'description',
+        'poster_path',
+        'poster',
+        'payment_qr_code',
+        'has_certificate',
+        'requires_payment',
+        'status',
+        'capacity',
     ];
 
     protected $casts = [
@@ -37,5 +46,15 @@ class Event extends Model
     public function students()
     {
         return $this->belongsToMany(Student::class, 'registrations', 'event_id', 'matric_or_staff_no');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function organizer()
+    {
+        return $this->belongsTo(User::class, 'organizer_id');
     }
 }

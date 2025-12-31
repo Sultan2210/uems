@@ -56,7 +56,8 @@
               <a href="{{ route('organizer.events.edit', $event->id) }}" class="btn btn-primary">Edit</a>
               <form action="{{ route('organizer.events.delete', $event->id) }}" method="POST" style="display:inline;">
                 @csrf
-                <button type="submit" class="btn btn-danger">Delete</button>
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this event? This action cannot be undone.')">Delete</button>
               </form>
             </div>
           </div>

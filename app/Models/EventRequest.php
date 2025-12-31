@@ -17,6 +17,7 @@ class EventRequest extends Model
         'start_time',
         'end_time',
         'poster_path',
+        'payment_qr_code',
         'has_certificate',
         'status',
         'admin_comment',

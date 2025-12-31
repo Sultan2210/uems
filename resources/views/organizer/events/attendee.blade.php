@@ -1,78 +1,131 @@
 @extends('layouts.organizer')
 
-@section('title','Attendee List')
+@section('title', 'Attendee List | UEMS')
+@section('page-title', 'Attendee List')
 
 @section('content')
-<div class="container py-4">
+<div class="container-fluid py-3">
 
-    <h4 class="fw-bold mb-4">Attendee List</h4>
+    {{-- Page Header --}}
+    <div class="mb-4">
+        <h4 class="font-weight-bolder mb-2">Attendee List</h4>
+        <p class="text-muted mb-0">View and manage attendees for your approved events</p>
+    </div>
 
-    {{-- SELECT EVENT --}}
-    <form method="GET" action="{{ route('organizer.attendees') }}" class="mb-4">
-        <div class="row align-items-end g-3">
-            <div class="col-md-6">
-                <label class="form-label fw-semibold">
-                    Select Approved Event
-                </label>
-                <select name="event_id" class="form-select" required>
-                    <option value="">-- Choose Event --</option>
-                    @foreach($events as $event)
-                        <option value="{{ $event->id }}"
-                            {{ optional($selectedEvent)->id == $event->id ? 'selected' : '' }}>
-                            {{ $event->event_name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <li>
-            <div class="col-md-3">
-                <button class="btn btn-primary w-100">
-                    View Attendees
-                </button>
-            </div>
-            </li>
+    {{-- SELECT EVENT CARD --}}
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ route('organizer.attendees') }}" class="row g-3 align-items-end">
+                <div class="col-md-8">
+                    <label class="form-label fw-semibold mb-2">
+                        <i class="bi bi-calendar-event me-2"></i>
+                        Select Approved Event
+                    </label>
+                    <select name="event_id" class="form-select form-select-lg" required>
+                        <option value="">-- Choose Event --</option>
+                        @foreach($events as $event)
+                            <option value="{{ $event->id }}"
+                                {{ optional($selectedEvent)->id == $event->id ? 'selected' : '' }}>
+                                {{ $event->event_name }}
+                                @if($event->start_at)
+                                    - {{ optional($event->start_at)->format('d M Y') }}
+                                @endif
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary btn-lg w-100 view-attendees-btn" type="submit">
+                        <i class="bi bi-people-fill me-2"></i>
+                        View Attendees
+                    </button>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 
-    {{-- ATTENDEE TABLE --}}
+    {{-- ATTENDEE TABLE CARD --}}
     @if($selectedEvent)
-        <div class="card shadow-sm border-0">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header bg-white border-bottom">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="font-weight-bolder mb-1">
+                            <i class="bi bi-people-fill me-2 text-primary"></i>
+                            {{ $selectedEvent->event_name }}
+                        </h5>
+                        @if($selectedEvent->start_at)
+                        <p class="text-muted small mb-0">
+                            <i class="bi bi-calendar-event me-1"></i>
+                            {{ optional($selectedEvent->start_at)->format('l, d F Y') }}
+                            @if($selectedEvent->start_at && $selectedEvent->end_at)
+                                • {{ optional($selectedEvent->start_at)->format('h:i A') }} - {{ optional($selectedEvent->end_at)->format('h:i A') }}
+                            @endif
+                        </p>
+                        @endif
+                    </div>
+                    <div>
+                        <span class="badge bg-primary px-3 py-2">
+                            <i class="bi bi-person-check me-1"></i>
+                            {{ $registrations->count() }} Attendee{{ $registrations->count() !== 1 ? 's' : '' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
             <div class="card-body">
-
-                <h6 class="fw-bold mb-3">
-                    Event: {{ $selectedEvent->event_name }}
-                </h6>
-
                 @if($registrations->isEmpty())
-                    <div class="alert alert-info">
-                        No students have registered for this event yet.
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="bi bi-inbox" style="font-size: 4rem; color: #dee2e6;"></i>
+                        </div>
+                        <h6 class="font-weight-bolder mb-2">No Attendees Yet</h6>
+                        <p class="text-muted mb-0">No students have registered for this event yet.</p>
                     </div>
                 @else
                     <div class="table-responsive">
-                        <table class="table table-bordered align-middle">
-                            <thead class="table-light">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="thead-light">
                                 <tr>
-                                    <th>#</th>
-                                    <th>Name</th>
-                                    <th>Matric / Staff No</th>
-                                    <th>Email</th>
-                                    <th>Status</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="width: 60px;">#</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Name</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Matric / Staff No</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Email</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($registrations as $index => $reg)
                                     <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>{{ $reg->full_name }}</td>
-                                        <td>{{ $reg->matric_or_staff_no }}</td>
-                                        <td>{{ optional($reg->user)->email ?? '-' }}</td>
                                         <td>
-                                            <span class="badge
-                                                {{ $reg->status === 'attended'
-                                                    ? 'bg-success'
-                                                    : 'bg-warning text-dark' }}">
-                                                {{ ucfirst($reg->status) }}
-                                            </span>
+                                            <span class="text-secondary text-xs font-weight-bold">{{ $index + 1 }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar avatar-sm me-2 bg-primary border-radius-lg">
+                                                    <span class="text-white text-xs font-weight-bold">{{ strtoupper(substr($reg->full_name, 0, 1)) }}</span>
+                                                </div>
+                                                <span class="text-xs font-weight-bold mb-0">{{ $reg->full_name }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="text-secondary text-xs">{{ $reg->matric_or_staff_no ?? '-' }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-secondary text-xs">{{ optional($reg->user)->email ?? '-' }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            @if($reg->status === 'attended')
+                                                <span class="badge bg-success text-white">
+                                                    <i class="bi bi-check-circle-fill me-1"></i>
+                                                    Attended
+                                                </span>
+                                            @else
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="bi bi-clock-fill me-1"></i>
+                                                    Registered
+                                                </span>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach
@@ -80,10 +133,63 @@
                         </table>
                     </div>
                 @endif
-
+            </div>
+        </div>
+    @else
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-body text-center py-5">
+                <div class="mb-3">
+                    <i class="bi bi-calendar-event" style="font-size: 4rem; color: #dee2e6;"></i>
+                </div>
+                <h6 class="font-weight-bolder mb-2">Select an Event</h6>
+                <p class="text-muted mb-0">Please select an event from the dropdown above to view its attendees.</p>
             </div>
         </div>
     @endif
 
 </div>
+
+<style>
+    .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+    }
+
+    .table th {
+        border-bottom: 1px solid #e9ecef;
+        padding: 12px;
+    }
+
+    .table td {
+        padding: 12px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .thead-light {
+        background-color: #f8f9fa;
+    }
+
+    .view-attendees-btn:hover {
+        background-color: #ffa726 !important;
+        border-color: #ffa726 !important;
+        color: #fff !important;
+    }
+
+    .view-attendees-btn:focus {
+        background-color: #ffa726 !important;
+        border-color: #ffa726 !important;
+        color: #fff !important;
+        box-shadow: 0 0 0 0.2rem rgba(255, 167, 38, 0.25) !important;
+    }
+</style>
+
 @endsection

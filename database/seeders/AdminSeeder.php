@@ -14,6 +14,8 @@ class AdminSeeder extends Seeder
             'email' => 'admin@uems.test',
             'password' => bcrypt('password'),
             'role' => 'admin',
+            'admin_approval_status' => 'approved',
+            'is_active' => true,
         ]);
     }
 }

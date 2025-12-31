@@ -3,6 +3,20 @@
 @section('content')
 <div class="container-fluid px-4 mt-4">
 
+  @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <strong>Success!</strong> {{ session('success') }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  @endif
+
+  @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <strong>Error!</strong> {{ session('error') }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  @endif
+
   <h4 class="mb-4">Pending Event Requests</h4>
 
   <div class="card shadow-sm border-0 rounded-3">
@@ -53,7 +67,7 @@
       </button>
 
       <!-- Approve -->
-      <form action="{{ route('admin.events.approved', $req->id) }}" method="POST" style="display:inline;">
+      <form action="{{ route('admin.events.approve', $req->id) }}" method="POST" style="display:inline;">
         @csrf
         <button class="btn btn-success btn-sm">Approve</button>
       </form>
@@ -86,34 +100,77 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
-        <div class="modal-body">
-          <p><strong>Title:</strong> {{ $req->title }}</p>
-          <p><strong>Organizer:</strong> {{ $req->organizer_name ?? $req->organizer_id }}</p>
-          <p><strong>Venue:</strong> {{ $req->venue }}</p>
+        <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+          <div class="mb-3">
+            <strong>Title:</strong>
+            <p class="mb-0">{{ $req->title }}</p>
+          </div>
 
-          <p><strong>Start:</strong>
-            {{ $req->start_time ? \Carbon\Carbon::parse($req->start_time)->format('d M Y, h:i A') : '-' }}
-          </p>
+          <div class="mb-3">
+            <strong>Organizer:</strong>
+            <p class="mb-0">{{ $req->organizer_name ?? $req->organizer_id }}</p>
+          </div>
 
-          <p><strong>End:</strong>
-            {{ $req->end_time ? \Carbon\Carbon::parse($req->end_time)->format('d M Y, h:i A') : '-' }}
-          </p>
+          <div class="mb-3">
+            <strong>Venue:</strong>
+            <p class="mb-0">{{ $req->venue ?? '-' }}</p>
+          </div>
 
-          <hr>
-          <p><strong>Description:</strong></p>
-          <p class="mb-0">{{ $req->description ?? '-' }}</p>
+          <div class="mb-3">
+            <strong>Start Time:</strong>
+            <p class="mb-0">{{ $req->start_time ? \Carbon\Carbon::parse($req->start_time)->format('d M Y, h:i A') : '-' }}</p>
+          </div>
 
-          @if($req->poster_path)
-            <hr>
-            <p><strong>Poster:</strong></p>
-            <img src="{{ asset('storage/'.$req->poster_path) }}" class="img-fluid rounded">
+          <div class="mb-3">
+            <strong>End Time:</strong>
+            <p class="mb-0">{{ $req->end_time ? \Carbon\Carbon::parse($req->end_time)->format('d M Y, h:i A') : '-' }}</p>
+          </div>
+
+          @if($req->capacity)
+          <div class="mb-3">
+            <strong>Capacity:</strong>
+            <p class="mb-0">{{ $req->capacity }}</p>
+          </div>
           @endif
 
           <hr>
-          <p><strong>Certificate:</strong> {{ $req->has_certificate ? 'Yes' : 'No' }}</p>
+
+          <div class="mb-3">
+            <strong>Description:</strong>
+            <p class="mb-0" style="white-space: pre-wrap; word-wrap: break-word;">{{ $req->description ?? '-' }}</p>
+          </div>
+
+          @if($req->poster_path)
+            <hr>
+            <div class="mb-3">
+              <strong>Poster:</strong>
+              <div class="mt-2">
+                <img src="{{ asset('storage/'.$req->poster_path) }}" class="img-fluid rounded" alt="Event Poster">
+              </div>
+            </div>
+          @endif
+
+          <hr>
+          <div class="mb-3">
+            <strong>Certificate:</strong>
+            <p class="mb-0">{{ $req->has_certificate ? 'Yes' : 'No' }}</p>
+          </div>
+
+          @if($req->payment_qr_code)
+          <div class="mb-3">
+            <strong>Payment QR Code:</strong>
+            <div class="mt-2">
+              <img src="{{ asset('storage/'.$req->payment_qr_code) }}" class="img-fluid rounded" style="max-width: 200px;" alt="Payment QR Code">
+            </div>
+          </div>
+          @endif
 
           @if($req->admin_comment)
-            <p><strong>Admin Comment:</strong> {{ $req->admin_comment }}</p>
+            <hr>
+            <div class="mb-3">
+              <strong>Admin Comment:</strong>
+              <p class="mb-0" style="white-space: pre-wrap; word-wrap: break-word;">{{ $req->admin_comment }}</p>
+            </div>
           @endif
         </div>
 

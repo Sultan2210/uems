@@ -7,6 +7,7 @@ use App\Models\EventRequest;
 use App\Models\Event;
 use App\Models\Registration;
 use App\Models\Feedback;
+use Illuminate\Support\Facades\Storage;
 
 class OrganizerController extends Controller
 {
@@ -134,14 +135,46 @@ public function store(Request $request)
     // Handle event deletion
     public function destroy($id)
     {
-        $event = EventRequest::findOrFail($id);
+        $eventRequest = EventRequest::findOrFail($id);
 
-        if ($event->organizer_id !== auth()->id()) {
+        if ($eventRequest->organizer_id !== auth()->id()) {
             return redirect()->route('organizer.events.index')->with('error', 'Unauthorized action.');
         }
 
-        // Delete the event
-        $event->delete();
+        // If the event request was approved, also delete the corresponding Event record
+        if ($eventRequest->status === 'approved') {
+            // Find the corresponding Event by matching key fields
+            $event = Event::where('created_by', $eventRequest->organizer_id)
+                ->where('event_name', $eventRequest->title)
+                ->where('start_at', $eventRequest->start_time)
+                ->where('status', 'approved')
+                ->first();
+
+            if ($event) {
+                // Delete associated files (poster, payment QR code) if they exist
+                if ($event->poster) {
+                    Storage::disk('public')->delete($event->poster);
+                }
+                if ($event->payment_qr_code) {
+                    Storage::disk('public')->delete($event->payment_qr_code);
+                }
+
+                // Delete the Event record (this will cascade delete registrations and feedbacks due to foreign keys)
+                $event->delete();
+            }
+        }
+
+        // Delete the event request files if they exist
+        if ($eventRequest->poster_path) {
+            Storage::disk('public')->delete($eventRequest->poster_path);
+        }
+        if ($eventRequest->payment_qr_code) {
+            Storage::disk('public')->delete($eventRequest->payment_qr_code);
+        }
+
+        // Delete the EventRequest record
+        $eventRequest->delete();
+
         return redirect()->route('organizer.events.index')->with('success', 'Event deleted successfully!');
     }
 

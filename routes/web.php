@@ -12,7 +12,7 @@ use App\Http\Controllers\StudentEventController;
 |--------------------------------------------------------------------------
 */
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 /*
@@ -58,6 +58,8 @@ Route::prefix('admin')
         Route::get('/user-list', [AdminController::class, 'userList'])->name('user.list');
         Route::post('/user/activate/{id}', [AdminController::class, 'activateUser'])->name('user.activate');
         Route::post('/user/deactivate/{id}', [AdminController::class, 'deactivateUser'])->name('user.deactivate');
+        Route::post('/admin/approve/{id}', [AdminController::class, 'approveAdmin'])->name('admin.approve');
+        Route::post('/admin/reject/{id}', [AdminController::class, 'rejectAdmin'])->name('admin.reject');
 
         Route::get('/approved-events', [AdminController::class, 'approvedEvents'])->name('events.approved');
         Route::get('/pending-events', [AdminController::class, 'pendingEvents'])->name('events.pending');

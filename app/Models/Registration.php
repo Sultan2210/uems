@@ -18,6 +18,7 @@ class Registration extends Model
         'phone',
         'status',
         'proof_of_payment',      // if you use payment
+        'payment_receipt',       // payment receipt file path
     ];
 
     // relationships (optional but recommended)

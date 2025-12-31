@@ -7,6 +7,7 @@ use App\Models\Feedback;
 use App\Models\Registration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class StudentEventController extends Controller
 {
@@ -51,12 +52,23 @@ class StudentEventController extends Controller
             ? $event->registrations()->count() >= $event->capacity
             : false;
 
+        // Check if user can mark attendance (between event start and 15 minutes after end)
+        $canMarkAttendance = false;
+        if ($event->start_at && $event->end_at) {
+            $now = now();
+            $startTime = \Carbon\Carbon::parse($event->start_at);
+            $endTime = \Carbon\Carbon::parse($event->end_at)->addMinutes(15);
+
+            $canMarkAttendance = $now->greaterThanOrEqualTo($startTime) && $now->lessThanOrEqualTo($endTime);
+        }
+
         return view('student.events.show', compact(
             'event',
             'registration',
             'alreadyRegistered',
             'alreadyAttended',
-            'isFull'
+            'isFull',
+            'canMarkAttendance'
         ));
     }
 
@@ -65,10 +77,26 @@ class StudentEventController extends Controller
     ===================================================== */
     public function register(Request $request, Event $event)
     {
-        $request->validate([
+        // Check if payment is required (payment_qr_code exists or requires_payment is true)
+        $paymentRequired = ($event->payment_qr_code || $event->requires_payment);
+
+        $validationRules = [
             'matric_or_staff_no' => 'required|string|max:255',
             'department' => 'required|string|max:255',
-        ]);
+        ];
+
+        // If payment is required, validate receipt upload
+        if ($paymentRequired) {
+            $validationRules['payment_receipt'] = 'required|image|mimes:jpeg,png,jpg,gif|max:2048';
+        }
+
+        $request->validate($validationRules);
+
+        // Handle payment receipt upload
+        $paymentReceiptPath = null;
+        if ($request->hasFile('payment_receipt')) {
+            $paymentReceiptPath = $request->file('payment_receipt')->store('payment_receipts', 'public');
+        }
 
         Registration::updateOrCreate(
             [
@@ -79,6 +107,7 @@ class StudentEventController extends Controller
                 'full_name' => Auth::user()->name,
                 'matric_or_staff_no' => $request->matric_or_staff_no,
                 'department' => $request->department,
+                'payment_receipt' => $paymentReceiptPath,
                 'status' => 'registered',
             ]
         );
@@ -93,6 +122,25 @@ class StudentEventController extends Controller
     ===================================================== */
     public function markAttendance($eventId)
     {
+        $event = Event::findOrFail($eventId);
+
+        // Validate that the current time is within the allowed window
+        if (!$event->start_at || !$event->end_at) {
+            return back()->withErrors(['error' => 'Event timing information is not available.']);
+        }
+
+        $now = now();
+        $startTime = \Carbon\Carbon::parse($event->start_at);
+        $endTime = \Carbon\Carbon::parse($event->end_at)->addMinutes(15);
+
+        if ($now->lessThan($startTime)) {
+            return back()->withErrors(['error' => 'Attendance cannot be marked before the event starts.']);
+        }
+
+        if ($now->greaterThan($endTime)) {
+            return back()->withErrors(['error' => 'Attendance can only be marked up to 15 minutes after the event ends.']);
+        }
+
         $registration = Registration::where('event_id', $eventId)
             ->where('user_id', Auth::id())
             ->firstOrFail();

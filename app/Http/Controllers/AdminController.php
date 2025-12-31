@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\EventRequest;
 use App\Models\Event;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
@@ -14,14 +15,14 @@ class AdminController extends Controller
     // Get the count of pending event requests
     $pendingCount = EventRequest::where('status', 'pending')->count();
 
-    // Get the count of approved events
+    // Get the count of approved events (from Event table)
     $approvedCount = Event::where('status', 'approved')->count();
 
-    // Get the count of rejected events (ensure correct status is checked)
-    $rejectedCount = Event::where('status', 'rejected')->count();
+    // Get the count of rejected events (from EventRequest table, as rejections are stored there)
+    $rejectedCount = EventRequest::where('status', 'rejected')->count();
 
-    // Get the total number of events (approved, pending, and rejected)
-    $totalEvents = Event::count();
+    // Get the total number of events (sum of approved, pending, and rejected)
+    $totalEvents = $approvedCount ;
 
     // Pass the data to the view
     return view('admin.dashboard', compact('pendingCount', 'approvedCount', 'rejectedCount', 'totalEvents'));
@@ -46,29 +47,28 @@ public function approveRequest($id)
         return back()->withErrors(['error' => 'Organizer ID is missing for this event request.']);
     }
 
-    // Handle the QR code upload (if provided)
-    $paymentQrPath = null; // Initialize payment QR code path
-    if ($req->hasFile('payment_qr_code')) {
-        // Store the uploaded QR code in the 'payment_qr_codes' directory
-        $paymentQrPath = $req->file('payment_qr_code')->store('payment_qr_codes', 'public');
-
-        // Save the QR code path in the EventRequest table as well
-        $req->payment_qr_code = $paymentQrPath;
-        $req->save();  // Update the EventRequest with the QR code path
-    }
+    // Get the payment QR code path from the EventRequest (already stored)
+    $paymentQrPath = $req->payment_qr_code ?? null;
 
     // Create the event with the necessary fields
+    // Note: The Event model uses different field names than EventRequest
     Event::create([
-        'event_name'  => $req->title,
-        'description' => $req->description,
-        'location'    => $req->venue,
-        'poster'      => $req->poster_path,
-        'created_by'  => $req->organizer_,  // Pass the organizer_id from the EventRequest
-        'status'      => 'approved',
-        'start_at'    => $req->start_time,
-        'end_at'      => $req->end_time,
-        'capacity'    => $req->capacity ?? null,
-        'payment_qr_code' => $paymentQrPath,  // Save the QR code file path in the Event table
+        'title'           => $req->title,  // Required field in events table
+        'event_name'      => $req->title,
+        'description'     => $req->description,
+        'venue'           => $req->venue,
+        'location'        => $req->venue,
+        'poster_path'     => $req->poster_path,
+        'poster'          => $req->poster_path,
+        'organizer_id'    => $req->organizer_id,  // Required field in events table
+        'created_by'      => $req->organizer_id,
+        'status'          => 'approved',
+        'start_time'      => $req->start_time,
+        'start_at'        => $req->start_time,
+        'end_time'        => $req->end_time,
+        'end_at'          => $req->end_time,
+        'capacity'        => $req->capacity ?? null,
+        'payment_qr_code' => $paymentQrPath,
     ]);
 
     // Update the status of the EventRequest to approved
@@ -84,6 +84,16 @@ public function approveRequest($id)
         ->get();
 
     return view('admin.events.pending', compact('requests'));
+}
+
+    public function approvedEvents()
+{
+    $events = Event::where('status', 'approved')
+        ->with(['creator', 'organizer'])
+        ->latest()
+        ->paginate(10);
+
+    return view('admin.events.approved', compact('events'));
 }
 
     // (optional) list rejected
@@ -110,22 +120,17 @@ public function approveRequest($id)
     $eventRequest->admin_comment = $request->admin_comment;
     $eventRequest->save();
 
-    // Optionally, update the event in the Event table (if you have one)
-    $event = Event::where('event_request_id', $eventRequest->id)->first();
-    if ($event) {
-        $event->status = 'rejected';
-        $event->save();
-    }
-
-    // Redirect back with a message
-    return redirect()->route('admin.events.rejected')->with('error', 'Event request rejected.');
+    // Redirect back with a success message
+    return redirect()->route('admin.events.pending')->with('success', 'Event request rejected successfully.');
 }
 
 
     public function userList()
 {
     $organizers = User::where('role', 'organizer')->get();
-    return view('admin.user-list', compact('organizers'));
+    $approvedAdmins = User::where('role', 'admin')->where('admin_approval_status', 'approved')->get();
+    $pendingAdmins = User::where('role', 'admin')->where('admin_approval_status', 'pending')->get();
+    return view('admin.user-list', compact('organizers', 'approvedAdmins', 'pendingAdmins'));
 }
 
 public function activateUser($id)
@@ -140,5 +145,25 @@ public function deactivateUser($id)
     $user = User::findOrFail($id);
     $user->update(['is_active' => false]);
     return redirect()->back()->with('error', 'User deactivated successfully!');
+}
+
+public function approveAdmin($id)
+{
+    $user = User::findOrFail($id);
+    if ($user->role !== 'admin') {
+        return redirect()->back()->with('error', 'User is not an admin.');
+    }
+    $user->update(['admin_approval_status' => 'approved', 'is_active' => true]);
+    return redirect()->back()->with('success', 'Admin approved successfully!');
+}
+
+public function rejectAdmin($id)
+{
+    $user = User::findOrFail($id);
+    if ($user->role !== 'admin') {
+        return redirect()->back()->with('error', 'User is not an admin.');
+    }
+    $user->update(['admin_approval_status' => 'rejected', 'is_active' => false]);
+    return redirect()->back()->with('error', 'Admin rejected successfully!');
 }
 }

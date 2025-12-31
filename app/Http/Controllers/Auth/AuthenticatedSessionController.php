@@ -26,9 +26,21 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
         if (!auth()->user()->is_active) {
-    Auth::logout();
-    return back()->withErrors(['email' => 'Your account has been deactivated by the admin.']);
-}
+            Auth::logout();
+            return back()->withErrors(['email' => 'Your account has been deactivated by the admin.']);
+        }
+
+        // Check if admin is approved
+        $user = auth()->user();
+        if ($user->role === 'admin' && $user->admin_approval_status !== 'approved') {
+            Auth::logout();
+            if ($user->admin_approval_status === 'rejected') {
+                return back()->withErrors(['email' => 'Your admin account has been rejected. Please contact an administrator.']);
+            } else {
+                return back()->withErrors(['email' => 'Your admin account is pending approval. Please wait for an administrator to approve your account.']);
+            }
+        }
+
         $request->session()->regenerate();
 
          $user = $request->user();
