@@ -43,13 +43,7 @@
 
             @if($event->status === 'rejected')
               <p><strong>Admin Comment:</strong> {{ $event->admin_comment }}</p>
-              <form action="{{ route('organizer.events.update', $event->id) }}" method="POST">
-                @csrf
-                <div class="mb-3">
-                  <textarea name="admin_comment" class="form-control" rows="3" placeholder="Edit Admin Comment">{{ $event->admin_comment }}</textarea>
-                </div>
-                <button type="submit" class="btn btn-warning">Resubmit for Approval</button>
-              </form>
+              <p class="text-muted small">Please use the Edit button to make changes and resubmit your event.</p>
             @endif
 
             <div class="mt-3">

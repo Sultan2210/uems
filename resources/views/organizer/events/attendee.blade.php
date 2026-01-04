@@ -91,7 +91,9 @@
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Name</th>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Matric / Staff No</th>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Email</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Payment Receipt</th>
                                     <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Status</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -115,6 +117,16 @@
                                             <span class="text-secondary text-xs">{{ optional($reg->user)->email ?? '-' }}</span>
                                         </td>
                                         <td class="text-center">
+                                            @if($reg->payment_receipt)
+                                                <button type="button" class="btn btn-sm btn-info text-white" data-bs-toggle="modal" data-bs-target="#receiptModal{{ $reg->id }}">
+                                                    <i class="bi bi-receipt me-1"></i>
+                                                    View Receipt
+                                                </button>
+                                            @else
+                                                <span class="text-secondary text-xs">No Receipt</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
                                             @if($reg->status === 'attended')
                                                 <span class="badge bg-success text-white">
                                                     <i class="bi bi-check-circle-fill me-1"></i>
@@ -125,6 +137,19 @@
                                                     <i class="bi bi-clock-fill me-1"></i>
                                                     Registered
                                                 </span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
+                                            @if($reg->payment_receipt && optional($reg->user)->email)
+                                                <form action="{{ route('organizer.send-ticket', $reg->id) }}" method="POST" style="display: inline-block;">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Send ticket email to {{ $reg->full_name }}?')">
+                                                        <i class="bi bi-envelope-fill me-1"></i>
+                                                        Send Ticket
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <span class="text-muted text-xs">-</span>
                                             @endif
                                         </td>
                                     </tr>
@@ -148,6 +173,47 @@
     @endif
 
 </div>
+
+{{-- Receipt Modals --}}
+@foreach($registrations as $reg)
+    @if($reg->payment_receipt)
+    <div class="modal fade" id="receiptModal{{ $reg->id }}" tabindex="-1" aria-labelledby="receiptModalLabel{{ $reg->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="receiptModalLabel{{ $reg->id }}">
+                        <i class="bi bi-receipt me-2"></i>
+                        Payment Receipt - {{ $reg->full_name }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="{{ asset('storage/' . $reg->payment_receipt) }}" alt="Payment Receipt" class="img-fluid" style="max-height: 70vh;">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+@endforeach
+
+{{-- Success/Error Messages --}}
+@if (session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert" style="position: fixed; top: 80px; right: 20px; z-index: 9999;">
+        <strong>Success!</strong> {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
+@if (session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" style="position: fixed; top: 80px; right: 20px; z-index: 9999;">
+        <strong>Error!</strong> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
 
 <style>
     .avatar {

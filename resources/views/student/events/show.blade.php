@@ -185,7 +185,7 @@
                                 </button>
                             </form>
                         @else
-                            @if($event->start_at && now()->lessThan(\Carbon\Carbon::parse($event->start_at)))
+                            @if($event->start_at && now()->lessThan($event->start_at))
                                 <div class="alert alert-info border-0 mb-0" role="alert">
                                     <i class="bi bi-clock me-2"></i>
                                     <strong>Event has not started yet.</strong> You can mark attendance once the event begins.

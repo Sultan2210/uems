@@ -37,8 +37,7 @@
 
             <form action="{{ route('organizer.events.update', $event->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <!-- Using POST as defined in web.php, but adding method override for REST compliance -->
-                @method('POST')
+                <input type="hidden" name="_method" value="PATCH">
 
                 <!-- Event Title -->
                 <div class="mb-3">

@@ -55,10 +55,15 @@ class StudentEventController extends Controller
         // Check if user can mark attendance (between event start and 15 minutes after end)
         $canMarkAttendance = false;
         if ($event->start_at && $event->end_at) {
+            // Get current time
             $now = now();
-            $startTime = \Carbon\Carbon::parse($event->start_at);
-            $endTime = \Carbon\Carbon::parse($event->end_at)->addMinutes(15);
 
+            // start_at and end_at are already Carbon instances due to model cast
+            // They are in the app timezone (Asia/Kuala_Lumpur - Malaysia time)
+            $startTime = $event->start_at;
+            $endTime = $event->end_at->copy()->addMinutes(15);
+
+            // Compare times: current time must be >= start AND <= end + 15 minutes
             $canMarkAttendance = $now->greaterThanOrEqualTo($startTime) && $now->lessThanOrEqualTo($endTime);
         }
 

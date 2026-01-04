@@ -75,14 +75,6 @@ Route::prefix('admin')
 | ORGANIZER
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth','role:organizer'])->prefix('organizer')->name('organizer.')->group(function () {
-
-    Route::get('/events/create',[OrganizerController::class,'create'])
-        ->name('events.create');
-
-    Route::post('/events/store',[OrganizerController::class,'store'])
-        ->name('events.store');
-});
 Route::prefix('organizer')
     ->middleware(['auth', 'role:organizer'])
     ->name('organizer.')
@@ -103,7 +95,7 @@ Route::prefix('organizer')
         Route::get('/events/{id}/edit', [OrganizerController::class, 'edit'])
             ->name('events.edit');
 
-        Route::put('/events/{id}', [OrganizerController::class, 'update'])
+        Route::match(['put', 'patch'], '/events/{id}', [OrganizerController::class, 'update'])
             ->name('events.update');
 
         Route::delete('/events/{id}', [OrganizerController::class, 'destroy'])
@@ -111,6 +103,9 @@ Route::prefix('organizer')
 
         Route::get('/attendees', [OrganizerController::class, 'attendees'])
             ->name('attendees');
+
+        Route::post('/send-ticket/{registration}', [OrganizerController::class, 'sendTicket'])
+            ->name('send-ticket');
 
         Route::get('/feedback-summary', [OrganizerController::class, 'feedbackSummary'])
     ->name('feedback.summary');

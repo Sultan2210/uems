@@ -8,6 +8,8 @@ use App\Models\Event;
 use App\Models\Registration;
 use App\Models\Feedback;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\TicketMail;
 
 class OrganizerController extends Controller
 {
@@ -119,13 +121,19 @@ public function store(Request $request)
             $validated['poster_path'] = $request->file('poster_path')->store('event_posters', 'public');
         }
 
+        // Store the original status before updating
+        $originalStatus = $event->status;
+        $wasRejected = ($originalStatus == 'rejected');
+
         // Update event details
         $event->update($validated);
 
-        // If event was rejected, reset the status to 'pending' and clear the admin comment
-        if ($event->status == 'rejected') {
+        // If event was rejected or approved, reset the status to 'pending' for re-approval
+        if ($originalStatus == 'rejected' || $originalStatus == 'approved') {
             $event->status = 'pending';
-            $event->admin_comment = null;  // Reset comment
+            if ($wasRejected) {
+                $event->admin_comment = null;  // Reset comment only for rejected events
+            }
             $event->save();
         }
 
@@ -228,5 +236,39 @@ public function feedbackSummary(Request $request)
 
     return view('organizer.events.feedback-summary', compact('events', 'selectedEvent', 'feedbacks'));
 }
+
+    public function sendTicket($registrationId)
+    {
+        $registration = Registration::with(['event', 'user'])->findOrFail($registrationId);
+
+        // Verify the event belongs to the organizer
+        if ($registration->event->created_by !== auth()->id()) {
+            return redirect()->route('organizer.attendees')
+                ->with('error', 'Unauthorized action.');
+        }
+
+        // Verify payment receipt exists
+        if (!$registration->payment_receipt) {
+            return redirect()->route('organizer.attendees', ['event_id' => $registration->event_id])
+                ->with('error', 'Payment receipt not found for this registration.');
+        }
+
+        // Verify user has email
+        if (!$registration->user || !$registration->user->email) {
+            return redirect()->route('organizer.attendees', ['event_id' => $registration->event_id])
+                ->with('error', 'Student email not found.');
+        }
+
+        try {
+            // Send the ticket email
+            Mail::to($registration->user->email)->send(new TicketMail($registration, $registration->event));
+
+            return redirect()->route('organizer.attendees', ['event_id' => $registration->event_id])
+                ->with('success', 'Ticket sent successfully to ' . $registration->full_name . ' (' . $registration->user->email . ')');
+        } catch (\Exception $e) {
+            return redirect()->route('organizer.attendees', ['event_id' => $registration->event_id])
+                ->with('error', 'Failed to send ticket email: ' . $e->getMessage());
+        }
+    }
 
 }
