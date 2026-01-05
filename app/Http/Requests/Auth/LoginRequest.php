@@ -27,12 +27,12 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'email' => ['required', 'string', 'email'],
+            'email' => ['required', 'string'],
             'password' => ['required', 'string'],
         ];
 
         // If login_role is present (role selection step), validate it
-        if ($this->has('login_role')) {
+        if ($this->has('login_role') || session('multiple_roles')) {
             $rules['login_role'] = ['required', 'in:organizer,student'];
         }
 
@@ -53,12 +53,14 @@ class LoginRequest extends FormRequest
         $loginRole = $this->string('login_role');
 
         // If login_role is specified, authenticate with that specific role
-        if ($loginRole) {
-            $user = \App\Models\User::where('email', $email)
-                ->where('role', $loginRole)
+        if ($loginRole && $loginRole->isNotEmpty()) {
+            // Use email from session if available (from role selection step), otherwise use input
+            $emailToUse = session('pending_login_email') ?? $email->toString();
+            $user = \App\Models\User::where('email', $emailToUse)
+                ->where('role', $loginRole->toString())
                 ->first();
 
-            if (!$user || !\Illuminate\Support\Facades\Hash::check($password, $user->password)) {
+            if (!$user || !\Illuminate\Support\Facades\Hash::check($password->toString(), $user->password)) {
                 RateLimiter::hit($this->throttleKey());
                 throw ValidationException::withMessages([
                     'email' => trans('auth.failed'),
@@ -66,40 +68,52 @@ class LoginRequest extends FormRequest
             }
 
             Auth::login($user, $this->boolean('remember'));
+            // Clear pending login email from session
+            session()->forget('pending_login_email');
+            RateLimiter::clear($this->throttleKey());
+            return;
         } else {
             // Standard authentication - but check if multiple roles exist
-            $users = \App\Models\User::where('email', $email)->get();
-            
+            $emailStr = $email->toString();
+            $passwordStr = $password->toString();
+            $users = \App\Models\User::where('email', $emailStr)->get();
+
+            if ($users->isEmpty()) {
+                RateLimiter::hit($this->throttleKey());
+                throw ValidationException::withMessages([
+                    'email' => trans('auth.failed'),
+                ]);
+            }
+
             // Check if email exists with both organizer and student roles
             $hasOrganizer = $users->contains('role', 'organizer');
             $hasStudent = $users->contains('role', 'student');
-            
+
             if ($hasOrganizer && $hasStudent) {
-                // Verify password matches at least one of the accounts
-                $passwordValid = false;
-                foreach ($users as $user) {
-                    if ($user->role === 'organizer' || $user->role === 'student') {
-                        if (\Illuminate\Support\Facades\Hash::check($password, $user->password)) {
-                            $passwordValid = true;
-                            break;
-                        }
-                    }
-                }
-                
-                if (!$passwordValid) {
+                // Verify password matches BOTH accounts (same person, same password)
+                $organizerUser = $users->firstWhere('role', 'organizer');
+                $studentUser = $users->firstWhere('role', 'student');
+
+                $organizerPasswordValid = $organizerUser && \Illuminate\Support\Facades\Hash::check($passwordStr, $organizerUser->password);
+                $studentPasswordValid = $studentUser && \Illuminate\Support\Facades\Hash::check($passwordStr, $studentUser->password);
+
+                // Password must match both accounts
+                if (!$organizerPasswordValid || !$studentPasswordValid) {
                     RateLimiter::hit($this->throttleKey());
                     throw ValidationException::withMessages([
                         'email' => trans('auth.failed'),
                     ]);
                 }
-                
-                // Password is valid - need role selection (don't increment rate limiter)
+
+                // Password is valid for both accounts - need role selection (don't increment rate limiter)
+                // Store email in session for the next step
+                session(['pending_login_email' => $emailStr]);
                 throw ValidationException::withMessages([
                     'email' => 'multiple_roles',
                 ]);
             }
 
-            // Standard authentication attempt
+            // Standard authentication attempt (single role)
             if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
                 RateLimiter::hit($this->throttleKey());
 

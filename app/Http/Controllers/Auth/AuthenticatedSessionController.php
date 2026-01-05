@@ -31,19 +31,20 @@ class AuthenticatedSessionController extends Controller
             // Check if the error is due to multiple roles
             $errors = $e->errors();
             if (isset($errors['email']) && in_array('multiple_roles', $errors['email'])) {
-                $email = $request->string('email');
+                $email = session('pending_login_email') ?? $request->input('email');
                 $users = User::where('email', $email)->get();
                 $hasOrganizer = $users->contains('role', 'organizer');
                 $hasStudent = $users->contains('role', 'student');
-                
+
                 // Return to login with role selection
                 return back()
                     ->withInput($request->only('email'))
                     ->with('multiple_roles', true)
                     ->with('has_organizer', $hasOrganizer)
-                    ->with('has_student', $hasStudent);
+                    ->with('has_student', $hasStudent)
+                    ->with('pending_login_email', $email);
             }
-            
+
             // Re-throw other validation errors
             throw $e;
         }
@@ -66,15 +67,21 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-         $user = $request->user();
+        // Clear any pending login email from session
+        $request->session()->forget('pending_login_email');
+        $request->session()->forget('multiple_roles');
+        $request->session()->forget('has_organizer');
+        $request->session()->forget('has_student');
 
-    if ($user->role === 'admin') {
-        return redirect()->route('admin.dashboard');
-    } elseif ($user->role === 'organizer') {
-        return redirect()->route('organizer.dashboard');
-    } else {
-        return redirect()->route('student.dashboard');
-    }
+        $user = $request->user();
+
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        } elseif ($user->role === 'organizer') {
+            return redirect()->route('organizer.dashboard');
+        } else {
+            return redirect()->route('student.dashboard');
+        }
     }
 
     /**
