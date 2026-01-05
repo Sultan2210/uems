@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,7 +25,29 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
+        try {
+            $request->authenticate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Check if the error is due to multiple roles
+            $errors = $e->errors();
+            if (isset($errors['email']) && in_array('multiple_roles', $errors['email'])) {
+                $email = $request->string('email');
+                $users = User::where('email', $email)->get();
+                $hasOrganizer = $users->contains('role', 'organizer');
+                $hasStudent = $users->contains('role', 'student');
+                
+                // Return to login with role selection
+                return back()
+                    ->withInput($request->only('email'))
+                    ->with('multiple_roles', true)
+                    ->with('has_organizer', $hasOrganizer)
+                    ->with('has_student', $hasStudent);
+            }
+            
+            // Re-throw other validation errors
+            throw $e;
+        }
+
         if (!auth()->user()->is_active) {
             Auth::logout();
             return back()->withErrors(['email' => 'Your account has been deactivated by the admin.']);

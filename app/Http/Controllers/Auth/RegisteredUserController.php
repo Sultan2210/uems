@@ -32,7 +32,22 @@ class RegisteredUserController extends Controller
 {
     $validationRules = [
         'name' => ['required', 'string', 'max:255'],
-        'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+        'email' => [
+            'required', 
+            'string', 
+            'email', 
+            'max:255',
+            // Allow same email for different roles (organizer and student)
+            function ($attribute, $value, $fail) use ($request) {
+                $existingUser = User::where('email', $value)
+                    ->where('role', $request->role)
+                    ->first();
+                
+                if ($existingUser) {
+                    $fail('This email is already registered as a ' . $request->role . '.');
+                }
+            },
+        ],
         'password' => ['required', 'confirmed', Rules\Password::defaults()],
         'role' => ['required', 'in:student,organizer,admin'],
         'matric_no' => ['nullable', 'string', 'max:255'],
