@@ -82,6 +82,7 @@
         <tr>
           <th>Name</th>
           <th>Email</th>
+          <th>Kulliyyah</th>
           <th>Status</th>
           <th>Action</th>
         </tr>
@@ -91,6 +92,7 @@
           <tr>
             <td>{{ $organizer->name }}</td>
             <td>{{ $organizer->email }}</td>
+            <td>{{ $organizer->kulliyyah }}</td>
             <td>
               @if ($organizer->is_active)
                 <span class="badge bg-success">Active</span>

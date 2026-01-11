@@ -47,7 +47,7 @@
             @endif
 
             <div class="mt-3">
-              <a href="{{ route('organizer.events.edit', $event->id) }}" class="btn btn-primary">Edit</a>
+              <a href="{{ route('organizer.events.edit', $event->id) }}" class="btn btn-outline-primary">Edit</a>
               <form action="{{ route('organizer.events.delete', $event->id) }}" method="POST" style="display:inline;">
                 @csrf
                 @method('DELETE')

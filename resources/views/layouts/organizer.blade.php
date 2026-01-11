@@ -90,14 +90,6 @@
         </li>
 
         <li class="nav-item">
-          <a class="nav-link uems-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"
-             href="{{ route('profile.edit') }}">
-            <span class="icon-tile"><i class="material-symbols-rounded">person</i></span>
-            <span class="nav-link-text ms-1">Profile</span>
-          </a>
-        </li>
-
-        <li class="nav-item">
           <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit"
